@@ -5,13 +5,13 @@ A warm, Urdu-first digital literacy simulator for adults to safely practise ever
 ## Features
 
 - Six safe practice scenarios, each with five decision-making questions
-- Five fictional message examples in the scam-identification scenario; tap warning signs without opening links
+- Five fictional message examples plus two fictional JazzCash/Easypaisa-style SMS exercises; tap warning signs without opening links
 - Two optional teach-back questions for every scenario, with completion tracked separately
 - A simple word guide available from both the home screen and practice screens
 - Urdu-first interface with English toggle and right-to-left layout
 - Neutral answer options shuffled independently at the beginning of each scenario session
 - Gentle explanations after a choice, including an opportunity to retry after an incorrect answer
-- Adaptive assistance per question: full help, hint, and recall
+- Adaptive assistance per question: full help, hint, recall, and independent practice
 - Local learning progress saved in browser localStorage, including the active question and its stable answer order
 - Everyday-language digital dictionary with optional speech
 - WhatsApp progress sharing only after explicit consent
@@ -32,7 +32,7 @@ Then open [http://localhost:8000](http://localhost:8000).
 
 Each question keeps its own help level and usage history. A first-try correct answer without help lowers that question’s help level for the next practice. Asking for a hint, revealing the answer, or getting stuck resets that question to full assistance. The teach-back questions and message-identification activity use the same help tracking. Correct answers are checked by stable option IDs, not by displayed positions. Options are shuffled once per question when a new session begins and remain in that order while the question is open.
 
-The message activity uses fictional, non-clickable message parts. Four examples show common warning signs and one is an ordinary reminder for comparison. No message is sent or loaded from the internet. Teach-back completion and reviewed message examples are saved locally, separately from the six core scenario completions.
+The message activity uses fictional message content and non-navigating buttons. Four general examples show common warning signs and one is an ordinary reminder for comparison. Two additional wallet-message examples are clearly labeled as fictional and do not connect to JazzCash, Easypaisa, or any other service. No message is sent and no link is opened or loaded from the internet. Teach-back completion and reviewed message examples are saved locally, separately from the six core scenario completions.
 
 ## Privacy and safety
 

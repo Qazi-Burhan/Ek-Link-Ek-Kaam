@@ -99,7 +99,7 @@ export function recordStepSuccess(state, scenarioId, stepId, independent = false
   step.lastOutcome = 'success';
   if (independent) {
     step.independentSuccessCount = (step.independentSuccessCount || 0) + 1;
-    step.helpLevel = Math.max(1, step.helpLevel - 1);
+    step.helpLevel = Math.max(0, Number(step.helpLevel ?? 3) - 1);
   }
   return step;
 }

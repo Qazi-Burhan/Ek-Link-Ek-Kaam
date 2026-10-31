@@ -1,10 +1,15 @@
 ﻿import { scenarioCatalog, dictionaryEntries } from './scenarios.js';
 import { messageExamples } from './message-practice.js';
 import { teachBackCatalog } from './teach-back.js';
+import { walletMessages } from './wallet-sms.js';
 import { buildHelperText, getStepLevel, shuffleOptions } from './engine.js';
+import { renderPhoneSimulation } from './phone-simulator.js';
+import { renderWalletInbox, renderWalletLearningSummary, renderWalletMessage } from './sms-simulator.js';
 import { buildSummary, ensureScenarioState, getScenarioState, getStepState, loadState, markScenarioComplete, markTeachBackComplete, recordHelpRequest, recordMessageExampleComplete, recordScenarioAttempt, recordStepAttempt, recordStepSuccess, recordTeachBackAttempt, saveState } from './storage.js';
 import { SpeechController } from './speech.js';
 import { translate } from './i18n.js';
+import { getScamClueExplanation } from './scam-detector.js';
+import { openWhatsAppMessage } from './whatsapp.js';
 
 const state = loadState();
 const speech = new SpeechController();
@@ -16,6 +21,10 @@ const runtime = {
   presentation: 'dashboard',
   completionKind: 'practice',
   messageIndex: 0,
+  messagePhase: 'generic',
+  activeWalletId: null,
+  walletSelectedClues: new Set(),
+  walletWrongSelection: false,
   messageSelectedClues: new Set(),
   messageAttemptCount: 0,
   messageHadWrongSelection: false,
@@ -142,7 +151,7 @@ function renderDashboard() {
       </div>
       ${scenario.id === 'real-fake-message' ? `
         <div class="scenario-meta teach-back-meta">
-          <span>${t('messageCount', { completed: progress.messagePractice.completedIds.length, total: messageExamples.length })}</span>
+          <span>${t('messageCount', { completed: progress.messagePractice.completedIds.length, total: messageExamples.length + walletMessages.length })}</span>
         </div>
       ` : ''}
       <button type="button" class="btn btn-primary scenario-start" data-scenario-id="${scenario.id}">${t('startPractice')}</button>
@@ -168,6 +177,10 @@ function persistActiveSession() {
     mode: runtime.mode,
     currentStepIndex: runtime.currentStepIndex,
     messageIndex: runtime.messageIndex,
+    messagePhase: runtime.messagePhase,
+    activeWalletId: runtime.activeWalletId,
+    walletSelectedClues: [...runtime.walletSelectedClues],
+    walletWrongSelection: runtime.walletWrongSelection,
     shuffledOptionsByStep: runtime.shuffledOptionsByStep,
     answerAttemptCount: runtime.answerAttemptCount,
     answerVisible: runtime.answerVisible,
@@ -197,6 +210,10 @@ function resumePractice() {
   runtime.presentation = 'scenario';
   runtime.currentStepIndex = Math.max(0, Math.min(Number(session.currentStepIndex) || 0, activeSteps().length - 1));
   runtime.messageIndex = Math.max(0, Math.min(Number(session.messageIndex) || 0, messageExamples.length - 1));
+  runtime.messagePhase = session.messagePhase || 'generic';
+  runtime.activeWalletId = typeof session.activeWalletId === 'string' ? session.activeWalletId : null;
+  runtime.walletSelectedClues = new Set(Array.isArray(session.walletSelectedClues) ? session.walletSelectedClues : []);
+  runtime.walletWrongSelection = Boolean(session.walletWrongSelection);
   runtime.shuffledOptionsByStep = session.shuffledOptionsByStep || {};
   activeSteps().forEach((step) => {
     if (!runtime.shuffledOptionsByStep[step.id]) {
@@ -214,8 +231,13 @@ function resumePractice() {
   runtime.feedback = session.feedbackType === 'incorrect'
     ? { type: 'incorrect', ...(runtime.mode === 'messages' ? { text: t('messageWrongSelection') } : {}) }
     : runtime.messageComplete && runtime.mode === 'messages'
-      ? { type: 'correct', text: messageExamples[runtime.messageIndex].feedback[currentLanguage()] }
-      : null;
+    ? {
+        type: 'correct',
+        text: runtime.messagePhase === 'wallet'
+          ? t('scamAllFound')
+          : messageExamples[runtime.messageIndex].feedback[currentLanguage()]
+      }
+    : null;
   renderScenario();
 }
 
@@ -309,6 +331,21 @@ function currentStep() {
     return teachBackCatalog[scenario.id]?.[runtime.currentStepIndex] || null;
   }
   if (runtime.mode === 'messages') {
+    if (runtime.messagePhase === 'wallet') {
+      const message = getWalletMessage();
+      if (!message) return null;
+      return {
+        id: `sms-${message.id}`,
+        title: { ur: message.heading.ur, en: message.heading.en },
+        contextUr: 'پیغام کو آرام سے پڑھیں۔ خطرے کی نشانی ہو تو اسے چنیں۔',
+        contextEn: 'Read the message calmly. Select a warning sign when you see one.',
+        hintUr: 'OTP، جلدی کا دباؤ، انجان لنک اور بھیجنے والے کا نام دیکھیں۔',
+        hintEn: 'Look for an OTP request, pressure, an unknown link, and the sender name.',
+        answerUr: message.explanation.ur,
+        answerEn: message.explanation.en
+      };
+    }
+    if (runtime.messagePhase !== 'generic') return null;
     const message = messageExamples[runtime.messageIndex];
     if (!message) return null;
     return {
@@ -421,6 +458,10 @@ function handleChoice(choiceId) {
 
 function startMessagePractice() {
   runtime.mode = 'messages';
+  runtime.messagePhase = 'wallet-inbox';
+  runtime.activeWalletId = null;
+  runtime.walletSelectedClues = new Set();
+  runtime.walletWrongSelection = false;
   runtime.messageIndex = 0;
   resetMessageItem();
   persistActiveSession();
@@ -453,16 +494,25 @@ function handleMessageTap(clueId) {
 
   if (!correctNone && !correctClue) {
     runtime.messageHadWrongSelection = true;
-    runtime.feedback = { type: 'incorrect', text: t('messageWrongSelection') };
+    runtime.feedback = {
+      type: 'incorrect',
+      text: `${t('messageWrongSelection')} ${message.safeSegments[currentLanguage()]}`
+    };
     persistActiveSession();
     renderScenario();
     return;
   }
 
-  if (correctClue) runtime.messageSelectedClues.add(clueId);
+  if (correctClue) {
+    runtime.messageSelectedClues.add(clueId);
+    runtime.feedback = {
+      type: 'correct',
+      text: `${t('scamFound')} ${getScamClueExplanation(clueId, currentLanguage())}`
+    };
+  }
   if (correctNone || [...expected].every((id) => runtime.messageSelectedClues.has(id))) {
     runtime.messageComplete = true;
-    runtime.feedback = { type: 'correct', text: message.feedback[currentLanguage()] };
+    runtime.feedback = { type: 'correct', text: `${message.feedback[currentLanguage()]} ${t('scamSafetySummary')}` };
     const independent = !runtime.helpUsedForCurrentStep
       && !runtime.messageHadWrongSelection
       && runtime.messageAttemptCount === Math.max(1, expected.size);
@@ -471,6 +521,102 @@ function handleMessageTap(clueId) {
   }
   persistActiveSession();
   renderScenario();
+}
+
+function getWalletMessage(id = runtime.activeWalletId) {
+  return walletMessages.find((message) => message.id === id);
+}
+
+function openWalletMessage(id) {
+  const message = getWalletMessage(id);
+  if (!message) return;
+  runtime.messagePhase = 'wallet';
+  runtime.activeWalletId = message.id;
+  runtime.walletSelectedClues = new Set();
+  runtime.walletWrongSelection = false;
+  runtime.messageComplete = false;
+  runtime.helpUsedForCurrentStep = false;
+  runtime.hintVisible = false;
+  runtime.answerVisible = false;
+  runtime.feedback = null;
+  persistActiveSession();
+  renderScenario();
+}
+
+function handleWalletWarning(warningId) {
+  const message = getWalletMessage();
+  if (!message || runtime.messagePhase !== 'wallet' || runtime.messageComplete) return;
+  const scenarioId = runtime.currentScenarioId;
+  const stepId = `sms-${message.id}`;
+  const warning = message.warnings.find((item) => item.id === warningId);
+  if (!warning) {
+    recordStepAttempt(state, scenarioId, stepId);
+    runtime.walletWrongSelection = true;
+    runtime.feedback = {
+      type: 'incorrect',
+      text: `${t('messageSafeReason')} ${message.safeSegments[currentLanguage()]}`
+    };
+    persistActiveSession();
+    renderScenario();
+    return;
+  }
+  if (runtime.walletSelectedClues.has(warningId)) return;
+  recordStepAttempt(state, scenarioId, stepId);
+  runtime.walletSelectedClues.add(warningId);
+  const allFound = message.warnings.every((item) => runtime.walletSelectedClues.has(item.id));
+  if (allFound) {
+    const independent = !runtime.helpUsedForCurrentStep
+      && !runtime.walletWrongSelection
+      && runtime.walletSelectedClues.size === message.warnings.length;
+    recordStepSuccess(state, scenarioId, stepId, independent);
+    recordMessageExampleComplete(state, scenarioId, message.id, independent);
+    runtime.messageComplete = true;
+    runtime.feedback = {
+      type: 'correct',
+      text: t('scamAllFound')
+    };
+  } else {
+    runtime.feedback = {
+      type: 'correct',
+      text: `${t('scamFound')} ${warning.why[currentLanguage()]}`
+    };
+  }
+  persistActiveSession();
+  renderScenario();
+}
+
+function showWalletSummary() {
+  runtime.messagePhase = 'wallet-summary';
+  runtime.feedback = null;
+  persistActiveSession();
+  renderScenario();
+}
+
+function returnToWalletInbox() {
+  runtime.messagePhase = 'wallet-inbox';
+  runtime.activeWalletId = null;
+  runtime.walletSelectedClues = new Set();
+  runtime.walletWrongSelection = false;
+  runtime.messageComplete = false;
+  runtime.helpUsedForCurrentStep = false;
+  runtime.hintVisible = false;
+  runtime.answerVisible = false;
+  runtime.feedback = null;
+  persistActiveSession();
+  renderScenario();
+}
+
+function openOtherMessageExamples() {
+  runtime.messagePhase = 'generic';
+  runtime.messageIndex = 0;
+  resetMessageItem();
+  persistActiveSession();
+  renderScenario();
+}
+
+function finishWalletPractice() {
+  if (!walletMessages.every((message) => getScenarioState(state, runtime.currentScenarioId).messagePractice.completedIds.includes(message.id))) return;
+  finishScenario();
 }
 
 function advanceMessagePractice() {
@@ -483,13 +629,12 @@ function advanceMessagePractice() {
     return;
   }
 
-  markScenarioComplete(state, runtime.currentScenarioId);
-  state.lastScenarioId = null;
-  state.activeSession = null;
-  saveState(state);
-  renderDashboard();
-  showCompletion('practice');
-  showToast(t('messagePracticeComplete'));
+  runtime.messagePhase = 'wallet-inbox';
+  runtime.activeWalletId = null;
+  runtime.walletSelectedClues = new Set();
+  runtime.walletWrongSelection = false;
+  persistActiveSession();
+  renderScenario();
 }
 
 function askHint() {
@@ -559,41 +704,109 @@ function closeDictionary() {
 
 function renderScenario() {
   const scenario = currentScenario();
-  const step = currentStep();
-  if (!scenario || !step) {
+  if (!scenario) {
     showDashboard();
     return;
   }
 
   showScenario();
+  document.getElementById('help-level').textContent = '';
   const heading = runtime.mode === 'messages'
     ? t('messagePracticeTitle')
     : runtime.mode === 'teachback'
       ? `${scenario.title[currentLanguage()]} — ${t('teachBackTitle')}`
       : scenario.title[currentLanguage()];
-  scenarioHeader.innerHTML = `${scenario.icon} <span>${heading}</span>`;
+  scenarioHeader.replaceChildren();
+  scenarioHeader.append(document.createTextNode(`${scenario.icon} `));
+  const headingText = document.createElement('span');
+  headingText.textContent = heading;
+  scenarioHeader.append(headingText);
 
-  const helperText = getStepHelperText(step);
-  helperCopy.textContent = helperText;
-  if (runtime.mode === 'messages') {
-    renderMessagePractice(scenario, helperText);
+  if (runtime.mode === 'messages' && runtime.messagePhase === 'wallet-inbox') {
+    helperCopy.textContent = t('walletInboxHelp');
+    document.getElementById('helper-actions').classList.add('hidden');
+    renderWalletInbox(practiceStage, {
+      language: currentLanguage(),
+      completedIds: getScenarioState(state, scenario.id).messagePractice.completedIds,
+      onOpenWallet: openWalletMessage,
+      onOpenMore: openOtherMessageExamples,
+      onShowSummary: showWalletSummary,
+      onBack: returnHome
+    });
     renderDictionary();
     return;
   }
 
-  const shuffledOptions = runtime.shuffledOptionsByStep[step.id] || step.options;
-  const optionsHtml = shuffledOptions.map((option) => {
-    return `
-      <button type="button" class="choice-btn" data-choice="${option.id}">
-        ${currentLanguage() === 'ur' ? option.labelUr : option.labelEn}
-      </button>
-    `;
-  }).join('');
+  if (runtime.mode === 'messages' && runtime.messagePhase === 'wallet') {
+    const message = getWalletMessage();
+    if (!message) {
+      returnToWalletInbox();
+      return;
+    }
+    const step = currentStep();
+    helperCopy.textContent = getStepHelperText(step);
+    const level = getStepLevel(state, scenario.id, step.id);
+    document.getElementById('help-level').textContent = t(
+      level === 3 ? 'helpFull' : level === 2 ? 'helpHint' : level === 1 ? 'helpRecall' : 'helpIndependent'
+    );
+    document.getElementById('helper-actions').classList.remove('hidden');
+    const progress = getScenarioState(state, scenario.id).messagePractice;
+    const lastWarningId = [...runtime.walletSelectedClues].at(-1);
+    const lastReason = message.warnings.find((warning) => warning.id === lastWarningId)?.why[currentLanguage()];
+    renderWalletMessage(practiceStage, {
+      language: currentLanguage(),
+      message,
+      instruction: t('walletInstruction'),
+      selectedIds: runtime.walletSelectedClues,
+      lastFeedback: runtime.feedback?.text || lastReason,
+      feedbackType: runtime.feedback?.type || 'correct',
+      complete: runtime.messageComplete,
+      completedWalletIds: progress.completedIds,
+      onBack: returnToWalletInbox,
+      onSelect: handleWalletWarning,
+      onReturnToInbox: returnToWalletInbox,
+      onShowSummary: showWalletSummary
+    });
+    renderDictionary();
+    return;
+  }
 
-  const progressText = t('stepProgress', {
-    current: runtime.currentStepIndex + 1,
-    total: activeSteps().length
-  });
+  if (runtime.mode === 'messages' && runtime.messagePhase === 'wallet-summary') {
+    helperCopy.textContent = t('walletSummaryHelp');
+    document.getElementById('helper-actions').classList.add('hidden');
+    renderWalletLearningSummary(practiceStage, {
+      language: currentLanguage(),
+      onBack: returnToWalletInbox,
+      onFinish: finishWalletPractice
+    });
+    renderDictionary();
+    return;
+  }
+
+  const step = currentStep();
+  if (!step) {
+    showDashboard();
+    return;
+  }
+  if (runtime.mode === 'messages') {
+    helperCopy.textContent = getStepHelperText(step);
+    const level = getStepLevel(state, scenario.id, step.id);
+    document.getElementById('help-level').textContent = t(
+      level === 3 ? 'helpFull' : level === 2 ? 'helpHint' : level === 1 ? 'helpRecall' : 'helpIndependent'
+    );
+    document.getElementById('helper-actions').classList.remove('hidden');
+    renderMessagePractice(scenario, helperCopy.textContent);
+    renderDictionary();
+    return;
+  }
+
+  const level = getStepLevel(state, scenario.id, step.id);
+  helperCopy.textContent = getStepHelperText(step);
+  document.getElementById('help-level').textContent = t(
+    level === 3 ? 'helpFull' : level === 2 ? 'helpHint' : level === 1 ? 'helpRecall' : 'helpIndependent'
+  );
+  document.getElementById('helper-actions').classList.remove('hidden');
+  const shuffledOptions = runtime.shuffledOptionsByStep[step.id] || step.options;
   let feedbackText = '';
   if (runtime.feedback?.type === 'incorrect') {
     const correctOption = step.options.find((option) => option.id === step.correctAction);
@@ -602,27 +815,18 @@ function renderScenario() {
     feedbackText = `${explanation} ${t('correctAnswer')} ${correctLabel}`;
   }
 
-  practiceStage.innerHTML = `
-    <div class="device-shell">
-      <div class="simulator-app">
-        <div class="simulator-banner">
-          <strong>${scenario.title[currentLanguage()]}</strong>
-          <small>${progressText}</small>
-        </div>
-        <div class="screen-block">
-          <div class="screen-alert">${step.title[currentLanguage()]}</div>
-          <p class="screen-question">${currentLanguage() === 'ur' ? step.promptUr : step.promptEn}</p>
-          <div class="choice-grid">${optionsHtml}</div>
-          <div id="answer-feedback" class="answer-feedback ${runtime.feedback ? `is-${runtime.feedback.type}` : 'is-empty'}" role="status" aria-live="polite">
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  practiceStage.querySelector('#answer-feedback').textContent = feedbackText;
-  practiceStage.querySelectorAll('[data-choice]').forEach((button) => {
-    button.addEventListener('click', () => handleChoice(button.dataset.choice));
+  renderPhoneSimulation({
+    root: practiceStage,
+    language: currentLanguage(),
+    scenario,
+    step,
+    stepIndex: runtime.currentStepIndex,
+    totalSteps: activeSteps().length,
+    options: shuffledOptions,
+    feedbackText,
+    feedbackType: runtime.feedback?.type || '',
+    onChoice: handleChoice,
+    onBack: returnHome
   });
 
   document.getElementById('ask-hint').textContent = t('hintBtn');

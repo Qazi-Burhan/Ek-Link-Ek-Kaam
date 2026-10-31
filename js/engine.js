@@ -2,7 +2,8 @@
 
 export function getStepLevel(state, scenarioId, stepId) {
   const step = getStepState(state, scenarioId, stepId);
-  return Number(step.helpLevel || 3);
+  const level = Number(step.helpLevel);
+  return Number.isFinite(level) ? Math.min(3, Math.max(0, level)) : 3;
 }
 
 export function startScenario(state, scenarioId) {
@@ -29,17 +30,19 @@ export function buildHelperText(step, lang, level, answerVisible) {
   const hint = lang === 'ur' ? step.hintUr : step.hintEn;
   const answer = lang === 'ur' ? step.answerUr : step.answerEn;
 
-  if (level === 3) {
+  if (level >= 3) {
     return answerVisible ? answer : context;
   }
 
   if (level === 2) {
-    return answerVisible ? answer : (lang === 'ur'
-      ? 'آرام سے جواب دیکھیں۔ ضرورت ہو تو اشارہ لے سکتے ہیں۔'
-      : 'Take your time with the options. You can ask for a hint if needed.');
+    return answerVisible ? answer : hint;
   }
 
-  return answerVisible ? answer : (lang === 'ur' ? 'اب آپ کیا کریں گے؟' : 'What will you do next?');
+  if (level === 1) {
+    return answerVisible ? answer : (lang === 'ur' ? 'آپ اگلا قدم خود چن سکتے ہیں۔' : 'Choose the next step yourself.');
+  }
+
+  return answerVisible ? answer : '';
 }
 
 export function shuffleOptions(options, random = Math.random) {
