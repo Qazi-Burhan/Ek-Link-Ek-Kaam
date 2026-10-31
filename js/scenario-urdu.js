@@ -325,17 +325,53 @@ export const scenarioUrdu = {
   }
 };
 
+function validateUrduText(text, description) {
+  if (typeof text !== 'string' || !text.trim()) {
+    throw new Error(`Missing Urdu text for ${description}.`);
+  }
+  if (/[A-Za-z]/.test(text)) {
+    throw new Error(`Roman text found in Urdu translation for ${description}.`);
+  }
+}
+
 export function applyUrduScenarioText(scenarios) {
+  const requiredFields = ['title', 'prompt', 'context', 'hint', 'answer', 'correct', 'incorrect'];
+
   scenarios.forEach((scenario) => {
     const scenarioText = scenarioUrdu[scenario.id];
-    if (scenarioText) {
-      scenario.title.ur = scenarioText.title;
-      scenario.short.ur = scenarioText.short;
+    if (!scenarioText) {
+      throw new Error(`Missing Urdu text for scenario "${scenario.id}".`);
     }
+    validateUrduText(scenarioText.title, `scenario "${scenario.id}" title`);
+    validateUrduText(scenarioText.short, `scenario "${scenario.id}" description`);
+
+    scenario.title.ur = scenarioText.title;
+    scenario.short.ur = scenarioText.short;
 
     scenario.steps.forEach((step) => {
       const text = scenarioUrdu[step.id];
-      if (!text) return;
+      if (!text) {
+        throw new Error(`Missing Urdu text for practice step "${step.id}".`);
+      }
+
+      const missingField = requiredFields.find((field) => typeof text[field] !== 'string' || !text[field].trim());
+      if (missingField) {
+        throw new Error(`Missing Urdu "${missingField}" text for practice step "${step.id}".`);
+      }
+      requiredFields.forEach((field) => validateUrduText(text[field], `practice step "${step.id}" ${field}`));
+
+      const optionIds = new Set(step.options.map((answerOption) => answerOption.id));
+      const translatedOptionIds = new Set(Object.keys(text.options || {}));
+      const missingOption = [...optionIds].find((id) => !translatedOptionIds.has(id));
+      if (missingOption) {
+        throw new Error(`Missing Urdu answer text for "${step.id}" option "${missingOption}".`);
+      }
+      const emptyOption = [...optionIds].find((id) => typeof text.options[id] !== 'string' || !text.options[id].trim());
+      if (emptyOption) {
+        throw new Error(`Empty Urdu answer text for "${step.id}" option "${emptyOption}".`);
+      }
+      optionIds.forEach((id) => validateUrduText(text.options[id], `practice step "${step.id}" option "${id}"`));
+
       step.title.ur = text.title;
       step.promptUr = text.prompt;
       step.contextUr = text.context;

@@ -56,6 +56,7 @@ function syncStaticText() {
 }
 
 function setLanguage(lang) {
+  speech.stop();
   state.language = lang;
   saveState(state);
   document.documentElement.lang = lang;
@@ -326,11 +327,6 @@ function renderScenario() {
 
   practiceStage.innerHTML = `
     <div class="device-shell">
-      <div class="device-header">
-        <span>9:41</span>
-        <span>📶</span>
-        <span>🔋</span>
-      </div>
       <div class="simulator-app">
         <div class="simulator-banner">
           <strong>${scenario.title[currentLanguage()]}</strong>
@@ -403,11 +399,11 @@ function attachInitialEvents() {
   document.getElementById('reveal-answer').addEventListener('click', revealAnswer);
   document.getElementById('stuck-btn').addEventListener('click', requestStuckHelp);
   document.getElementById('close-dictionary').addEventListener('click', closeDictionary);
-  document.getElementById('speak-dictionary').addEventListener('click', () => {
+  document.getElementById('speak-dictionary').addEventListener('click', async () => {
     const text = dictBody.textContent || '';
     const language = currentLanguage() === 'ur' ? 'ur' : 'en';
-    const played = speech.speak(text, language);
-    if (!played) {
+    const played = await speech.speak(text, language);
+    if (played === false && language === currentLanguage()) {
       showToast(t(language === 'ur' ? 'speechUnavailable' : 'speechFailed'));
     }
   });

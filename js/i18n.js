@@ -27,7 +27,7 @@ const translations = {
     answerBtn: 'جواب دیکھیں',
     stuckBtn: 'مجھے مدد چاہیے',
     speak: 'سنیں',
-    speechUnavailable: 'اس آلے میں اردو آواز نہیں ہے۔ آپ وضاحت پڑھ سکتے ہیں۔',
+    speechUnavailable: 'اس فون پر اردو آواز دستیاب نہیں۔ آپ تحریر پڑھ سکتے ہیں۔',
     speechFailed: 'آواز نہیں چل سکی۔ وضاحت یہاں پڑھ لیں۔',
     shareConsentTitle: 'پیش رفت شیئر کریں؟',
     shareConsentText: 'کیا آپ اپنی مختصر پیش رفت واٹس ایپ پر شیئر کرنا چاہتے ہیں؟',
@@ -100,7 +100,12 @@ const translations = {
 };
 
 export function translate(key, lang = 'ur', values = {}) {
-  let text = translations[lang]?.[key] || translations.ur[key] || key;
+  let text = translations[lang]?.[key];
+  if (typeof text !== 'string') {
+    console.error(`Missing "${lang}" translation for "${key}".`);
+    return lang === 'ur' ? 'یہ عبارت دستیاب نہیں۔' : 'This text is unavailable.';
+  }
+
   Object.entries(values).forEach(([name, value]) => {
     text = text.replaceAll(`{${name}}`, String(value));
   });

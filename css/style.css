@@ -336,14 +336,6 @@ img { max-width: 100%; }
   padding: 16px;
   box-shadow: var(--shadow);
 }
-.device-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: 700;
-  color: var(--green-900);
-  margin-bottom: 12px;
-}
 .simulator-app {
   background: linear-gradient(180deg, #edf7f5, #f5f8f6);
   border: 1px solid rgba(31,77,66,0.08);

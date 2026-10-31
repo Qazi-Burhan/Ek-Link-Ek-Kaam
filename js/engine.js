@@ -35,11 +35,11 @@ export function buildHelperText(step, lang, level, answerVisible) {
 
   if (level === 2) {
     return answerVisible ? answer : (lang === 'ur'
-      ? 'Aaraam se options par ghaur karein. Zaroorat ho to hint le sakte hain.'
+      ? 'آرام سے جواب دیکھیں۔ ضرورت ہو تو اشارہ لے سکتے ہیں۔'
       : 'Take your time with the options. You can ask for a hint if needed.');
   }
 
-  return answerVisible ? answer : (lang === 'ur' ? 'Ab agla qadam kya hoga?' : 'What will you do next?');
+  return answerVisible ? answer : (lang === 'ur' ? 'اب آپ کیا کریں گے؟' : 'What will you do next?');
 }
 
 export function shuffleOptions(options, random = Math.random) {
