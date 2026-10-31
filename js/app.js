@@ -56,6 +56,7 @@ function syncStaticText() {
 }
 
 function setLanguage(lang) {
+  speech.stop();
   state.language = lang;
   saveState(state);
   document.documentElement.lang = lang;
@@ -327,9 +328,17 @@ function renderScenario() {
   practiceStage.innerHTML = `
     <div class="device-shell">
       <div class="device-header">
-        <span>9:41</span>
-        <span>📶</span>
-        <span>🔋</span>
+        <span class="device-time">9:41</span>
+        <span class="device-status-icons" role="img" aria-label="${t('deviceStatus')}">
+          <svg class="device-status-icon" viewBox="0 0 20 16" aria-hidden="true" focusable="false">
+            <path d="M1 14h2V9H1zm5 0h2V6H6zm5 0h2V3h-2zm5 0h2V0h-2z" />
+          </svg>
+          <svg class="device-status-icon device-battery-icon" viewBox="0 0 24 14" aria-hidden="true" focusable="false">
+            <rect x="1" y="1" width="19" height="12" rx="2" />
+            <path d="M22 4v6" />
+            <path class="device-battery-level" d="M4 4h11v6H4z" />
+          </svg>
+        </span>
       </div>
       <div class="simulator-app">
         <div class="simulator-banner">
@@ -403,11 +412,11 @@ function attachInitialEvents() {
   document.getElementById('reveal-answer').addEventListener('click', revealAnswer);
   document.getElementById('stuck-btn').addEventListener('click', requestStuckHelp);
   document.getElementById('close-dictionary').addEventListener('click', closeDictionary);
-  document.getElementById('speak-dictionary').addEventListener('click', () => {
+  document.getElementById('speak-dictionary').addEventListener('click', async () => {
     const text = dictBody.textContent || '';
     const language = currentLanguage() === 'ur' ? 'ur' : 'en';
-    const played = speech.speak(text, language);
-    if (!played) {
+    const played = await speech.speak(text, language);
+    if (played === false && language === currentLanguage()) {
       showToast(t(language === 'ur' ? 'speechUnavailable' : 'speechFailed'));
     }
   });
