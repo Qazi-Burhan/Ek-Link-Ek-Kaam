@@ -38,6 +38,7 @@
               <p data-i18n="welcomeText">آئیے، آج فون کا ایک کام خود سیکھتے ہیں۔</p>
               <div class="hero-actions">
                 <button type="button" class="btn btn-primary" id="start-random" data-i18n="startPractice">مشق شروع کریں</button>
+                <button type="button" class="btn btn-secondary hidden" id="continue-practice" data-i18n="continuePractice">یہ مشق جاری رکھیں</button>
                 <button type="button" class="btn btn-ghost" id="share-progress" data-i18n="shareProgress">اپنی پیش رفت شیئر کریں</button>
               </div>
               <p class="privacy-notice" data-i18n="safeNotice">یہ صرف مشق ہے۔ یہاں اصلی بینک، پیسے، پاس ورڈ یا ذاتی معلومات استعمال نہیں ہوتیں۔</p>
@@ -78,6 +79,10 @@
                 <span class="stat-value" id="need-practice">0</span>
                 <span class="stat-label" data-i18n="needPractice">جن مشقوں کو پھر سے کرنا ہے</span>
               </div>
+              <div class="stat-box">
+                <span class="stat-value" id="completed-teach-backs">0</span>
+                <span class="stat-label" data-i18n="completedTeachBacks">دوسروں کو سمجھائی گئی مشقیں</span>
+              </div>
             </div>
           </section>
 
@@ -89,6 +94,14 @@
               </div>
             </div>
             <div id="scenario-grid" class="scenario-grid" aria-live="polite"></div>
+          </section>
+
+          <section class="card home-dictionary">
+            <div class="section-header">
+              <p class="eyebrow" data-i18n="dictionaryTitle">ڈیجیٹل لفظوں کے مطلب</p>
+              <h2 data-i18n="dictionaryHomeTitle">لفظوں کے آسان مطلب</h2>
+            </div>
+            <div id="home-dictionary-list" class="dictionary-list"></div>
           </section>
         </section>
 
@@ -123,6 +136,21 @@
             </aside>
           </div>
         </section>
+
+        <section id="completion-view" class="view-panel completion-view hidden" aria-live="polite">
+          <div class="completion-card card">
+            <p class="eyebrow" data-i18n="progressHeading">آپ کی پیش رفت</p>
+            <h1 id="completion-title"></h1>
+            <p id="completion-copy"></p>
+            <div class="completion-actions">
+              <button type="button" class="btn btn-primary" id="start-teach-back" data-i18n="teachBackStart">اب آپ بتائیں</button>
+              <button type="button" class="btn btn-secondary" id="repeat-practice" data-i18n="repeatPractice">یہ مشق دوبارہ کریں</button>
+              <button type="button" class="btn btn-secondary" id="repeat-teach-back" data-i18n="teachBackRepeat">دوبارہ سمجھائیں</button>
+              <button type="button" class="btn btn-ghost" id="completion-share" data-i18n="shareProgress">اپنی پیش رفت شیئر کریں</button>
+              <button type="button" class="btn btn-ghost" id="completion-home" data-i18n="backHome">واپس گھر جائیں</button>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
 
@@ -145,7 +173,10 @@
       <div class="modal-card card">
         <h3 id="modal-title" data-i18n="shareConsentTitle">پیش رفت شیئر کریں؟</h3>
         <p id="consent-message" data-i18n="shareConsentText">کیا آپ اپنی مختصر پیش رفت واٹس ایپ پر شیئر کرنا چاہتے ہیں؟</p>
+        <label for="share-preview" data-i18n="sharePreviewLabel">شیئر کرنے سے پہلے اپنا خلاصہ دیکھیں</label>
+        <textarea id="share-preview" class="share-preview" rows="4" dir="auto"></textarea>
         <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="copy-share" data-i18n="copySummary">خلاصہ نقل کریں</button>
           <button type="button" class="btn btn-primary" id="confirm-share" data-i18n="shareConfirm">ہاں، شیئر کریں</button>
           <button type="button" class="btn btn-secondary" id="cancel-share" data-i18n="shareCancel">ابھی نہیں</button>
         </div>
