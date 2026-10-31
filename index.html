@@ -44,6 +44,18 @@
               <p class="privacy-notice" data-i18n="safeNotice">یہ صرف مشق ہے۔ یہاں اصلی بینک، پیسے، پاس ورڈ یا ذاتی معلومات استعمال نہیں ہوتیں۔</p>
             </div>
             <div class="hero-illustration" aria-hidden="true">
+              <svg class="learner-art" viewBox="0 0 300 260" focusable="false">
+                <circle cx="158" cy="137" r="112" fill="#dcece3" />
+                <path d="M75 260c5-58 35-91 82-91s78 33 83 91" fill="#0f766e" />
+                <path d="M120 144h73v28h-73z" fill="#d7a27f" />
+                <ellipse cx="157" cy="94" rx="39" ry="47" fill="#ddb08f" />
+                <path d="M118 91c0-34 20-54 44-54 27 0 43 20 42 54-9-13-19-20-31-23-15 12-32 18-55 19z" fill="#203431" />
+                <path d="M99 201c15-17 31-25 46-25m42 0c18 4 31 14 43 29" fill="none" stroke="#d7a27f" stroke-linecap="round" stroke-width="16" />
+                <rect x="176" y="146" width="31" height="52" rx="7" fill="#203431" />
+                <rect x="180" y="151" width="23" height="40" rx="4" fill="#f8faf6" />
+                <circle cx="191.5" cy="194" r="1.5" fill="#dcece3" />
+                <path d="M126 81c-6 28-2 53 15 68" fill="none" stroke="#d7a27f" stroke-linecap="round" stroke-width="8" />
+              </svg>
               <div class="phone-frame">
                 <div class="phone-notch"></div>
                 <div class="phone-screen">
@@ -60,6 +72,22 @@
               <div>
                 <p class="eyebrow" data-i18n="progressHeading">آپ کی پیش رفت</p>
                 <h2 data-i18n="progressTitle">شاباش! آپ بہت اچھا سیکھ رہے ہیں۔</h2>
+              </div>
+            </div>
+            <div class="progress-insight">
+              <div class="progress-ring" id="learning-progress-ring" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <span id="learning-progress-percent">0%</span>
+              </div>
+              <div class="progress-insight-copy">
+                <strong data-i18n="learningJourney">آپ کا سیکھنے کا سفر</strong>
+                <p id="learning-progress-caption"></p>
+                <div class="progress-track" aria-hidden="true">
+                  <span id="learning-progress-fill"></span>
+                </div>
+              </div>
+              <div class="progress-guidance">
+                <span class="eyebrow" data-i18n="currentGuidance">مدد کی سطح</span>
+                <strong id="dashboard-help-level"></strong>
               </div>
             </div>
             <div class="stats-grid">
@@ -101,6 +129,10 @@
               <p class="eyebrow" data-i18n="dictionaryTitle">ڈیجیٹل لفظوں کے مطلب</p>
               <h2 data-i18n="dictionaryHomeTitle">لفظوں کے آسان مطلب</h2>
             </div>
+            <label class="dictionary-search-wrap">
+              <span class="visually-hidden" data-i18n="dictionarySearch">لفظ تلاش کریں</span>
+              <input class="dictionary-search" type="search" data-i18n-placeholder="dictionarySearchPlaceholder" placeholder="لفظ تلاش کریں" autocomplete="off" />
+            </label>
             <div id="home-dictionary-list" class="dictionary-list"></div>
           </section>
         </section>
@@ -120,6 +152,12 @@
                   <span id="help-level" class="help-level" aria-live="polite"></span>
                 </div>
                 <p id="helper-copy" class="helper-copy"></p>
+                <div class="help-journey" role="list" aria-label="مدد کی سطح">
+                  <span class="help-journey-step" role="listitem" data-help-level="3" data-i18n="helpFull">پوری مدد</span>
+                  <span class="help-journey-step" role="listitem" data-help-level="2" data-i18n="helpHint">ہلکا اشارہ</span>
+                  <span class="help-journey-step" role="listitem" data-help-level="1" data-i18n="helpRecall">یاد کر کے دیکھیں</span>
+                  <span class="help-journey-step" role="listitem" data-help-level="0" data-i18n="helpIndependent">بغیر اشارے کے</span>
+                </div>
                 <div class="helper-actions" id="helper-actions">
                   <button type="button" class="btn btn-primary" id="ask-hint" data-i18n="hintBtn">اشارہ</button>
                   <button type="button" class="btn btn-secondary" id="reveal-answer" data-i18n="answerBtn">جواب دیکھیں</button>
@@ -132,6 +170,10 @@
                   <span class="helper-icon" aria-hidden="true">📖</span>
                   <h3 data-i18n="dictionaryTitle">ڈیجیٹل لفظوں کے مطلب</h3>
                 </div>
+                <label class="dictionary-search-wrap">
+                  <span class="visually-hidden" data-i18n="dictionarySearch">لفظ تلاش کریں</span>
+                  <input class="dictionary-search" type="search" data-i18n-placeholder="dictionarySearchPlaceholder" placeholder="لفظ تلاش کریں" autocomplete="off" />
+                </label>
                 <div id="dictionary-list" class="dictionary-list"></div>
               </div>
             </aside>

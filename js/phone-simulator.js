@@ -201,6 +201,7 @@ export function renderPhoneSimulation({
   stepIndex,
   totalSteps,
   options,
+  teachBackMessage,
   feedbackText,
   feedbackType,
   onChoice,
@@ -218,6 +219,11 @@ export function renderPhoneSimulation({
   titlebar.append(element('span', 'sim-step-title', step.title[language]));
   titlebar.append(element('span', 'sim-step-count', `${stepIndex + 1} / ${totalSteps}`));
   content.append(titlebar);
+  if (teachBackMessage) {
+    const achievement = element('div', 'teach-back-banner', teachBackMessage);
+    achievement.setAttribute('role', 'note');
+    content.append(achievement);
+  }
 
   const scene = element('section', 'sim-app-scene');
   scene.setAttribute('aria-label', pair('فرضی ایپ کی اسکرین', 'Fictional app screen', language));
