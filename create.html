@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Create and share a bilingual step-by-step guide." />
+    <title>Ek Link, Ek Kaam — Guide creator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body class="page-create">
+    <div class="page-shell narrow-shell">
+      <header class="topbar">
+        <a class="brand-wrap brand-link" href="./index.html" data-i18n-aria-label="brandName" aria-label="Ek Link, Ek Kaam">
+          <span class="logo-mark" aria-hidden="true">🔗</span>
+          <span>
+            <span class="eyebrow" data-i18n="creator">گائیڈ ساز</span>
+            <span class="brand-name" data-i18n="newGuide">نئی گائیڈ بنائیں</span>
+          </span>
+        </a>
+        <div class="header-actions">
+          <div class="language-switch" role="group" data-i18n-aria-label="languageControl" aria-label="Language">
+            <button type="button" data-language="ur" aria-pressed="true">اردو</button>
+            <button type="button" data-language="en" aria-pressed="false">English</button>
+          </div>
+          <a class="btn btn-ghost" href="./index.html" data-i18n="home">صفحۂ اول</a>
+        </div>
+      </header>
+
+      <main class="creator-layout">
+        <section class="card create-panel">
+          <div class="alert-banner" role="alert">
+            <strong data-i18n="safety">حفاظتی یاد دہانی</strong>
+            <span data-i18n="safetyText">OTP، Password، PIN یا Card Number کبھی شامل نہ کریں۔</span>
+          </div>
+          <form id="guide-form" novalidate>
+            <div class="field-group">
+              <p class="field-heading" data-i18n="guideTitle">گائیڈ کا عنوان</p>
+              <label for="guide-title-en" class="field-sublabel" data-i18n="guideTitleEn">گائیڈ کا عنوان (English)</label>
+              <input id="guide-title-en" name="guideTitleEn" type="text" maxlength="100" placeholder="Guide title (English)" dir="ltr" />
+              <label for="guide-title-ur" class="field-sublabel" data-i18n="guideTitleUr">گائیڈ کا عنوان (اردو)</label>
+              <input id="guide-title-ur" name="guideTitleUr" type="text" maxlength="100" placeholder="گائیڈ کا عنوان (اردو)" dir="rtl" />
+            </div>
+            <div class="field-group">
+              <p class="field-heading" data-i18n="guideDescription">تفصیل (اختیاری)</p>
+              <label for="guide-description-en" class="field-sublabel" data-i18n="guideDescriptionEn">تفصیل (English)</label>
+              <textarea id="guide-description-en" name="guideDescriptionEn" rows="2" placeholder="Description (English)"></textarea>
+              <label for="guide-description-ur" class="field-sublabel" data-i18n="guideDescriptionUr">تفصیل (اردو)</label>
+              <textarea id="guide-description-ur" name="guideDescriptionUr" rows="2" placeholder="تفصیل (اردو)" dir="rtl"></textarea>
+            </div>
+
+            <div class="section-head compact creator-header">
+              <div>
+                <p class="eyebrow" data-i18n="stepsHeading">گائیڈ کے قدم</p>
+                <h2 data-i18n="stepsHeading">گائیڈ کے قدم</h2>
+              </div>
+              <button type="button" id="add-step" class="btn btn-secondary" data-i18n="addStep">قدم شامل کریں</button>
+            </div>
+            <div id="steps-list" class="steps-list" aria-live="polite"></div>
+            <div id="form-errors" class="form-errors" role="alert" aria-live="assertive"></div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" data-i18n="createLink">شیئر لنک بنائیں</button>
+              <button type="button" id="reset-form" class="btn btn-ghost" data-i18n="resetForm">دوبارہ شروع کریں</button>
+            </div>
+          </form>
+        </section>
+
+        <aside class="card preview-panel">
+          <div class="section-head compact">
+            <div>
+              <p class="eyebrow" data-i18n="preview">لائیو پیش منظر</p>
+              <h2 data-i18n="guidePreview">آپ کی گائیڈ کا پیش منظر</h2>
+            </div>
+          </div>
+          <div id="guide-preview" class="guide-preview" aria-live="polite"></div>
+        </aside>
+      </main>
+    </div>
+
+    <div id="share-modal" class="modal hidden" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="share-modal-title">
+        <h2 id="share-modal-title" data-i18n="linkTitle">آپ کی گائیڈ کا لنک</h2>
+        <p class="muted" data-i18n="linkDescription">گائیڈ اس لنک میں موجود ہے؛ سیکھنے کی پیش رفت سیکھنے والے کے آلے پر رہتی ہے۔</p>
+        <div class="share-box"><input id="share-link" type="text" readonly data-i18n-aria-label="shareableGuideUrl" aria-label="Shareable guide URL" /></div>
+        <div id="share-status" class="form-errors" role="status" aria-live="polite"></div>
+        <div class="modal-actions">
+          <button type="button" id="copy-link" class="btn btn-primary" data-i18n="copyLink">لنک کاپی کریں</button>
+          <button type="button" id="share-whatsapp" class="btn btn-secondary" data-i18n="shareWhatsApp">WhatsApp پر بھیجیں</button>
+        </div>
+        <button type="button" id="close-modal" class="btn btn-ghost" data-i18n="close">بند کریں</button>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>
