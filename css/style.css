@@ -171,6 +171,16 @@ img { max-width: 100%; }
   flex-wrap: wrap;
   margin-top: 20px;
 }
+.privacy-notice {
+  margin: 14px 0 0;
+  color: var(--green-900);
+  font-size: 0.94rem;
+  line-height: 1.65;
+}
+.dictionary-language-toggle {
+  width: fit-content;
+  margin: 0 auto 12px;
+}
 .hero-illustration {
   display: flex;
   align-items: center;

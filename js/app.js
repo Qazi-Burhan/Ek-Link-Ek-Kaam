@@ -35,8 +35,8 @@ function currentLanguage() {
   return state.language;
 }
 
-function t(key) {
-  return translate(key, currentLanguage());
+function t(key, values = {}) {
+  return translate(key, currentLanguage(), values);
 }
 
 function showToast(message) {
@@ -60,6 +60,13 @@ function setLanguage(lang) {
   saveState(state);
   document.documentElement.lang = lang;
   document.documentElement.dir = lang === 'ur' ? 'rtl' : 'ltr';
+  document.title = t('appName');
+  document.querySelector('meta[name="description"]')?.setAttribute('content', t('pageDescription'));
+  document.querySelector('.brand')?.setAttribute('aria-label', t('appName'));
+  document.getElementById('language-control')?.setAttribute('aria-label', t('languageControl'));
+  document.getElementById('dictionary-language-control')?.setAttribute('aria-label', t('languageControl'));
+  document.getElementById('progress-panel')?.setAttribute('aria-label', t('progressHeading'));
+  document.getElementById('close-dictionary')?.setAttribute('aria-label', t('closeDictionary'));
   document.querySelectorAll('[data-lang]').forEach((button) => {
     const active = button.dataset.lang === lang;
     button.classList.toggle('is-active', active);
@@ -69,6 +76,9 @@ function setLanguage(lang) {
   renderDashboard();
   if (runtime.currentScenarioId) {
     renderScenario();
+  }
+  if (!dictSheet.classList.contains('hidden') && dictionaryEntries[dictTitle.textContent]) {
+    openDictionary(dictTitle.textContent);
   }
 }
 
@@ -105,8 +115,7 @@ function renderDashboard() {
     scenarioGrid.appendChild(article);
   });
 
-  document.getElementById('privacy-toggle').textContent = t('privacy');
-  document.getElementById('share-progress').textContent = t('shareToChild');
+  document.getElementById('share-progress').textContent = t('shareProgress');
 }
 
 function startScenario(scenarioId) {
@@ -143,7 +152,7 @@ function finishScenario() {
   runtime.feedback = null;
   runtime.shuffledOptionsByStep = {};
   showDashboard();
-  showToast(currentLanguage() === 'ur' ? 'Shabash! Aap ne is scenario ko complete kar liya.' : 'Well done! You completed this scenario.');
+  showToast(t('scenarioComplete'));
 }
 
 function showDashboard() {
@@ -214,9 +223,7 @@ function handleChoice(choiceId) {
   const stepProgress = getStepState(state, scenario.id, step.id);
   stepProgress.lastOutcome = 'retry';
   saveState(state);
-  showToast(currentLanguage() === 'ur'
-    ? 'Koi baat nahi. Yeh practice hai—araam se dobara koshish karein.'
-    : 'No worries. This is practice—take your time and try again.');
+  showToast(t('retryMessage'));
   renderScenario();
 }
 
@@ -305,7 +312,10 @@ function renderScenario() {
     `;
   }).join('');
 
-  const progressText = `Step ${runtime.currentStepIndex + 1} / ${scenario.steps.length}`;
+  const progressText = t('stepProgress', {
+    current: runtime.currentStepIndex + 1,
+    total: scenario.steps.length
+  });
   let feedbackText = '';
   if (runtime.feedback?.type === 'incorrect') {
     const correctOption = step.options.find((option) => option.id === step.correctAction);
@@ -355,9 +365,10 @@ function handleShareProgress() {
 
 function confirmShare() {
   const summary = buildSummary(state);
-  const message = currentLanguage() === 'ur'
-    ? `Aaj ${summary.completedScenarios} practice mukammal hui. ${summary.independentSteps} qadam baghair madad ke kiye gaye. Digital hunar seekhne ka safar jari hai!`
-    : `${summary.completedScenarios} practice scenarios completed today. ${summary.independentSteps} steps were completed independently. The digital learning journey continues!`;
+  const message = t('progressShareMessage', {
+    scenarios: summary.completedScenarios,
+    steps: summary.independentSteps
+  });
 
   const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
   window.open(url, '_blank', 'noopener,noreferrer');
@@ -394,11 +405,11 @@ function attachInitialEvents() {
   document.getElementById('close-dictionary').addEventListener('click', closeDictionary);
   document.getElementById('speak-dictionary').addEventListener('click', () => {
     const text = dictBody.textContent || '';
-    speech.speak(text, currentLanguage() === 'ur' ? 'ur-PK' : 'en-US');
-  });
-
-  document.getElementById('privacy-toggle').addEventListener('click', () => {
-    showToast(t('safePractice'));
+    const language = currentLanguage() === 'ur' ? 'ur' : 'en';
+    const played = speech.speak(text, language);
+    if (!played) {
+      showToast(t(language === 'ur' ? 'speechUnavailable' : 'speechFailed'));
+    }
   });
 
   document.addEventListener('keydown', (event) => {

@@ -1,78 +1,80 @@
+import { applyUrduScenarioText } from './scenario-urdu.js';
+
 export const dictionaryEntries = {
   OTP: {
-    ur: 'Ek baar istemal hone wala code. Yeh ek din ki chabi jaisa hai. Isay kisi ko mat batayein.',
-    en: 'A code used one time. It is like a one-use key. Do not tell it to anyone.'
+    ur: 'یہ ایک خاص نمبر ہوتا ہے جو کچھ دیر کے لیے ملتا ہے۔ اسے کسی کو نہ بتائیں، چاہے وہ بینک کا نام لے کر بات کرے۔',
+    en: 'A special number that works for a short time. Never share it with anyone, even if they claim to be from your bank.'
   },
   Verify: {
-    ur: 'Kisi cheez ko check karna ke woh sahi hai ya nahi.',
-    en: 'To check whether something is correct or not.'
+    ur: 'کسی چیز کو اچھی طرح چیک کرنا کہ وہ صحیح ہے یا نہیں۔',
+    en: 'Checking that something is correct and really belongs to you.'
   },
   Update: {
-    ur: 'App ko naya karna, jaise purani cheez ki jagah us ka naya version lagana.',
-    en: 'To make an app newer, like replacing an old item with its newer version.'
+    ur: 'ایپ کا نیا ورژن لگانا، تاکہ وہ بہتر طریقے سے کام کرے۔',
+    en: 'Getting the newer version of an app so it can work better.'
   },
   Login: {
-    ur: 'Apne account mein dakhil hona.',
-    en: 'To enter your account.'
+    ur: 'اپنا اکاؤنٹ کھولنا، جیسے اپنے گھر کا دروازہ اپنی چابی سے کھولتے ہیں۔',
+    en: 'Opening your account, like using your key to enter your home.'
   },
   Logout: {
-    ur: 'Apne account se bahar nikalna.',
-    en: 'To leave your account.'
+    ur: 'اپنا اکاؤنٹ بند کر کے باہر آ جانا۔',
+    en: 'Leaving your account when you have finished using it.'
   },
   Password: {
-    ur: 'Aapke account ki chhupi hui chabi. Isay sirf aapko pata hona chahiye.',
-    en: 'The secret key to your account. Only you should know it.'
+    ur: 'ایک خفیہ لفظ یا نمبر جس سے آپ اپنا اکاؤنٹ کھولتے ہیں۔ اسے کسی کو نہ بتائیں۔',
+    en: 'A secret word or number used to open your account. Keep it private.'
   },
   Storage: {
-    ur: 'Phone ki almari jahan photos, videos aur doosri cheezein rakhi hoti hain.',
-    en: 'The phone’s cupboard where photos, videos, and other things are kept.'
+    ur: 'فون کی وہ جگہ جہاں تصویریں، ویڈیوز اور دوسری چیزیں رکھی ہوتی ہیں۔',
+    en: 'The space in your phone where photos, videos, and other things are kept.'
   },
   Permission: {
-    ur: 'Phone se kisi kaam ki ijazat lena. Jaise camera istemal karne ki ijazat.',
-    en: 'Asking to use something on the phone, like asking to use its camera.'
+    ur: 'کسی کام کی اجازت، جیسے ایپ کو کیمرہ استعمال کرنے دینا۔',
+    en: 'Allowing an app to use something, such as your camera.'
   },
   Backup: {
-    ur: 'Zaroori photos aur files ki ek extra copy, taake original kho jaye to doosri copy mil sake.',
-    en: 'An extra copy of important photos and files, in case the original is lost.'
+    ur: 'ضروری تصویروں اور فائلوں کی ایک اضافی کاپی، تاکہ اصل چیز گم ہو جائے تو دوسری کاپی موجود ہو۔',
+    en: 'An extra copy of important photos and files, in case the originals are lost.'
   },
   Link: {
-    ur: 'Internet par kisi page tak pohanchne ka raasta. Anjaan link par bina soche click na karein.',
-    en: 'A path to a page on the internet. Do not tap an unknown link without thinking.'
+    ur: 'کسی ویب سائٹ یا صفحے کو کھولنے کا راستہ۔ انجان لنک نہ کھولیں۔',
+    en: 'A way to open a website or page. Avoid opening links from people you do not know.'
   },
   Session: {
-    ur: 'Jab tak aap account chala rahe hote hain, yeh us waqt ka naam hai.',
-    en: 'The time while you are using an account.'
+    ur: 'وہ وقت جب آپ اپنا اکاؤنٹ استعمال کر رہے ہوتے ہیں۔',
+    en: 'The time while you are using your account.'
   },
   'Required field': {
-    ur: 'Form ka woh khana jo bharna zaroori hota hai. Jaise kisi kagaz par naam ki jagah.',
-    en: 'A box in a form that must be filled, like the name space on a paper form.'
+    ur: 'فارم کا وہ خانہ جو بھرنا ضروری ہوتا ہے۔ جیسے کاغذ پر نام کی جگہ۔',
+    en: 'A box in a form that must be filled, like the name space on paper.'
   },
   Review: {
-    ur: 'Bhejne se pehle apni likhi hui baat dobara dekh lena.',
+    ur: 'بھیجنے سے پہلے اپنی لکھی ہوئی بات دوبارہ دیکھ لینا۔',
     en: 'Looking over what you wrote before sending it.'
   },
   Submit: {
-    ur: 'Form ko check karne ke baad aage bhejna.',
+    ur: 'فارم کو دیکھنے کے بعد بھیجنا۔',
     en: 'Sending a form after checking it.'
   },
   Scam: {
-    ur: 'Dhoka dene wala paigham ya baat. Is mein aapse paisa ya raaz maanga ja sakta hai.',
+    ur: 'دھوکا دینے والا پیغام۔ اس میں آپ سے پیسے یا خفیہ بات پوچھی جا سکتی ہے۔',
     en: 'A trick meant to fool you. It may ask for money or private details.'
   },
   Internet: {
-    ur: 'Phone ka woh raasta jis se aap websites aur messages tak pohanchte hain.',
-    en: 'The connection that lets your phone reach websites and messages.'
+    ur: 'فون کا رابطہ جس سے آپ ویب سائٹ اور پیغام کھولتے ہیں۔',
+    en: 'The connection that lets your phone open websites and messages.'
   },
   Camera: {
-    ur: 'Phone ki aankh jo tasveer ya video banati hai.',
+    ur: 'فون کی آنکھ جو تصویریں اور ویڈیوز بناتی ہے۔',
     en: 'The phone’s eye that takes photos and videos.'
   },
   Microphone: {
-    ur: 'Phone ka kaan jo aapki awaaz sunta hai.',
-    en: 'The phone’s ear that hears your voice.'
+    ur: 'فون کا مائیک جس سے آپ کی آواز دوسرے تک جاتی ہے۔',
+    en: 'The phone’s microphone carries your voice to other people.'
   },
   Mute: {
-    ur: 'Awaaz band karna, taake call par doosre aapko na sun saken.',
+    ur: 'اپنی آواز بند کرنا، تاکہ کال پر دوسرے آپ کو نہ سن سکیں۔',
     en: 'Turning your sound off so other people on a call cannot hear you.'
   }
 };
@@ -834,3 +836,5 @@ export const scenarioCatalog = [
     ]
   }
 ];
+
+applyUrduScenarioText(scenarioCatalog);

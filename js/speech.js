@@ -1,21 +1,30 @@
-﻿export class SpeechController {
+export class SpeechController {
   constructor() {
-    this.enabled = 'speechSynthesis' in window;
+    this.enabled = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
   }
 
-  speak(text, lang = 'ur-PK') {
+  speak(text, language = 'ur') {
     if (!this.enabled || !text) return false;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang;
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-    utterance.volume = 1;
+
     const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find((voice) => voice.lang.toLowerCase().startsWith(lang.split('-')[0].toLowerCase())) || voices[0];
-    if (preferred) utterance.voice = preferred;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-    return true;
+    const languagePrefix = language === 'ur' ? 'ur' : 'en';
+    const voice = voices.find((candidate) =>
+      candidate.lang.toLowerCase().startsWith(languagePrefix)
+    );
+    if (!voice) return false;
+
+    try {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.voice = voice;
+      utterance.lang = voice.lang;
+      utterance.rate = 0.9;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+      return true;
+    } catch (error) {
+      console.warn('Speech could not be started on this device.', error);
+      return false;
+    }
   }
 
   stop() {

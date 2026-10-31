@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Phone Practice - A safe digital learning simulator for adults." />
-    <title>Phone Practice</title>
+    <meta name="description" content="فون پر محفوظ طریقے سے نئی باتیں سیکھیں۔" />
+    <title>فون کی مشق</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -13,20 +13,19 @@
   <body>
     <div class="page-shell">
       <header class="topbar">
-        <div class="brand" aria-label="Phone Practice">
+        <div class="brand" aria-label="فون کی مشق">
           <span class="brand-mark" aria-hidden="true">📱</span>
           <div>
-            <div class="eyebrow" data-i18n="brandTag">Practice with confidence</div>
-            <strong class="brand-name">Phone Practice</strong>
+            <div class="eyebrow" data-i18n="brandTag">Easy and safe practice</div>
+            <strong class="brand-name" data-i18n="appName">فون کی مشق</strong>
           </div>
         </div>
 
         <div class="header-actions">
-          <div class="language-toggle" role="group" aria-label="Select language">
+          <div class="language-toggle" id="language-control" role="group" aria-label="زبان منتخب کریں">
             <button type="button" class="lang-btn is-active" data-lang="ur" aria-pressed="true">اردو</button>
             <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">English</button>
           </div>
-          <button type="button" class="btn btn-secondary" id="privacy-toggle" data-i18n="privacy">Privacy</button>
         </div>
       </header>
 
@@ -34,49 +33,50 @@
         <section id="dashboard-view" class="view-panel">
           <section class="hero card">
             <div class="hero-copy">
-              <p class="tag" data-i18n="welcomeTag">Yahan ghalti karna bilkul safe hai.</p>
+              <p class="tag" data-i18n="welcomeTag">یہاں غلطی کرنا محفوظ ہے۔</p>
               <h1 data-i18n="welcomeTitle">السلام علیکم!</h1>
-              <p data-i18n="welcomeText">Aaiye, aaj phone ka ek kaam khud practice karte hain.</p>
+              <p data-i18n="welcomeText">آئیے، آج فون کا ایک کام خود سیکھتے ہیں۔</p>
               <div class="hero-actions">
-                <button type="button" class="btn btn-primary" id="start-random" data-i18n="startPractice">Practice shuru karein</button>
-                <button type="button" class="btn btn-ghost" id="share-progress" data-i18n="shareToChild">Beta ko apni progress dikhayein</button>
+                <button type="button" class="btn btn-primary" id="start-random" data-i18n="startPractice">مشق شروع کریں</button>
+                <button type="button" class="btn btn-ghost" id="share-progress" data-i18n="shareProgress">اپنی پیش رفت شیئر کریں</button>
               </div>
+              <p class="privacy-notice" data-i18n="safeNotice">یہ صرف مشق ہے۔ یہاں اصلی بینک، پیسے، پاس ورڈ یا ذاتی معلومات استعمال نہیں ہوتیں۔</p>
             </div>
             <div class="hero-illustration" aria-hidden="true">
               <div class="phone-frame">
                 <div class="phone-notch"></div>
                 <div class="phone-screen">
-                  <div class="mini-card success">✅ Safe practice</div>
-                  <div class="mini-card">📘 Step by step</div>
-                  <div class="mini-card">🔒 No real risk</div>
+                  <div class="mini-card success" data-i18n="miniSafe">✅ محفوظ مشق</div>
+                  <div class="mini-card" data-i18n="miniSteps">📘 ایک ایک قدم</div>
+                  <div class="mini-card" data-i18n="miniRisk">🔒 کوئی خطرہ نہیں</div>
                 </div>
               </div>
             </div>
           </section>
 
-          <section class="progress-panel card" aria-label="Practice progress dashboard">
+          <section class="progress-panel card" id="progress-panel" aria-label="آپ کی پیش رفت">
             <div class="section-header">
               <div>
-                <p class="eyebrow" data-i18n="progressHeading">Progress dashboard</p>
-                <h2 data-i18n="progressTitle">Shabash! Aap bohat achha seekh rahe hain.</h2>
+                <p class="eyebrow" data-i18n="progressHeading">آپ کی پیش رفت</p>
+                <h2 data-i18n="progressTitle">شاباش! آپ بہت اچھا سیکھ رہے ہیں۔</h2>
               </div>
             </div>
             <div class="stats-grid">
               <div class="stat-box">
                 <span class="stat-value" id="completed-scenarios">0</span>
-                <span class="stat-label" data-i18n="completedScenarios">Completed practice scenarios</span>
+                <span class="stat-label" data-i18n="completedScenarios">مکمل کی گئی مشقیں</span>
               </div>
               <div class="stat-box">
                 <span class="stat-value" id="attempt-count">0</span>
-                <span class="stat-label" data-i18n="practiceAttempts">Practice attempts</span>
+                <span class="stat-label" data-i18n="practiceAttempts">مشق کی باریاں</span>
               </div>
               <div class="stat-box">
                 <span class="stat-value" id="independent-steps">0</span>
-                <span class="stat-label" data-i18n="independentSteps">Steps completed independently</span>
+                <span class="stat-label" data-i18n="independentSteps">بغیر مدد کے کیے گئے قدم</span>
               </div>
               <div class="stat-box">
                 <span class="stat-value" id="need-practice">0</span>
-                <span class="stat-label" data-i18n="needPractice">Scenarios that need more practice</span>
+                <span class="stat-label" data-i18n="needPractice">جن مشقوں کو پھر سے کرنا ہے</span>
               </div>
             </div>
           </section>
@@ -84,8 +84,8 @@
           <section class="scenario-section">
             <div class="section-header section-header-inline">
               <div>
-                <p class="eyebrow" data-i18n="chooseTask">Choose a task</p>
-                <h2 data-i18n="learnScenarios">Practice scenarios</h2>
+                <p class="eyebrow" data-i18n="chooseTask">ایک کام چنیں</p>
+                <h2 data-i18n="learnScenarios">فون کی مشقیں</h2>
               </div>
             </div>
             <div id="scenario-grid" class="scenario-grid" aria-live="polite"></div>
@@ -94,7 +94,7 @@
 
         <section id="scenario-view" class="view-panel hidden" aria-live="polite">
           <div class="scenario-toolbar">
-            <button type="button" class="btn btn-secondary" id="back-home" data-i18n="backHome">Back to home</button>
+            <button type="button" class="btn btn-secondary" id="back-home" data-i18n="backHome">واپس گھر جائیں</button>
             <div id="scenario-header" class="scenario-headline"></div>
           </div>
           <div class="scenario-layout">
@@ -103,20 +103,20 @@
               <div class="card helper-card">
                 <div class="helper-header">
                   <span class="helper-icon" aria-hidden="true">🧭</span>
-                  <h3 data-i18n="madadTitle">Madad Kam Karte Jao</h3>
+                  <h3 data-i18n="madadTitle">مدد آہستہ آہستہ کم کریں</h3>
                 </div>
                 <p id="helper-copy" class="helper-copy"></p>
                 <div class="helper-actions">
-                  <button type="button" class="btn btn-primary" id="ask-hint" data-i18n="hintBtn">Hint</button>
-                  <button type="button" class="btn btn-secondary" id="reveal-answer" data-i18n="answerBtn">Answer</button>
-                  <button type="button" class="btn btn-ghost" id="stuck-btn" data-i18n="stuckBtn">Atak gayein</button>
+                  <button type="button" class="btn btn-primary" id="ask-hint" data-i18n="hintBtn">اشارہ</button>
+                  <button type="button" class="btn btn-secondary" id="reveal-answer" data-i18n="answerBtn">جواب دیکھیں</button>
+                  <button type="button" class="btn btn-ghost" id="stuck-btn" data-i18n="stuckBtn">مجھے مدد چاہیے</button>
                 </div>
               </div>
 
               <div class="card dictionary-card">
                 <div class="helper-header">
                   <span class="helper-icon" aria-hidden="true">📖</span>
-                  <h3 data-i18n="dictionaryTitle">Digital dictionary</h3>
+                  <h3 data-i18n="dictionaryTitle">ڈیجیٹل لفظوں کے مطلب</h3>
                 </div>
                 <div id="dictionary-list" class="dictionary-list"></div>
               </div>
@@ -126,24 +126,28 @@
       </main>
     </div>
 
-    <div id="dict-sheet" class="dict-sheet hidden" aria-live="polite" aria-modal="true" role="dialog">
+    <div id="dict-sheet" class="dict-sheet hidden" aria-live="polite" aria-modal="true" role="dialog" aria-labelledby="dict-title">
       <div class="dict-sheet-content card">
         <div class="sheet-header">
           <h3 id="dict-title">OTP</h3>
-          <button type="button" class="icon-btn" id="close-dictionary" aria-label="Close">✕</button>
+          <button type="button" class="icon-btn" id="close-dictionary" aria-label="مطلب بند کریں">✕</button>
+        </div>
+        <div class="language-toggle dictionary-language-toggle" id="dictionary-language-control" role="group" aria-label="زبان منتخب کریں">
+          <button type="button" class="lang-btn is-active" data-lang="ur" aria-pressed="true">اردو</button>
+          <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">English</button>
         </div>
         <p id="dict-body"></p>
-        <button type="button" class="btn btn-primary" id="speak-dictionary" data-i18n="speak">Speak</button>
+        <button type="button" class="btn btn-primary" id="speak-dictionary" data-i18n="speak">سنیں</button>
       </div>
     </div>
 
     <div id="consent-modal" class="modal hidden" aria-modal="true" role="dialog" aria-labelledby="modal-title">
       <div class="modal-card card">
-        <h3 id="modal-title" data-i18n="shareConsentTitle">Progress share</h3>
-        <p id="consent-message" data-i18n="shareConsentText">Aap apni progress beta ko WhatsApp par share karna chahte hain?</p>
+        <h3 id="modal-title" data-i18n="shareConsentTitle">پیش رفت شیئر کریں؟</h3>
+        <p id="consent-message" data-i18n="shareConsentText">کیا آپ اپنی مختصر پیش رفت واٹس ایپ پر شیئر کرنا چاہتے ہیں؟</p>
         <div class="modal-actions">
-          <button type="button" class="btn btn-primary" id="confirm-share" data-i18n="shareConfirm">Haan, dekhain</button>
-          <button type="button" class="btn btn-secondary" id="cancel-share" data-i18n="shareCancel">Nahi</button>
+          <button type="button" class="btn btn-primary" id="confirm-share" data-i18n="shareConfirm">ہاں، شیئر کریں</button>
+          <button type="button" class="btn btn-secondary" id="cancel-share" data-i18n="shareCancel">ابھی نہیں</button>
         </div>
       </div>
     </div>
