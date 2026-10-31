@@ -691,7 +691,6 @@ img { max-width: 100%; }
   box-shadow: 0 16px 38px rgba(27,58,51,0.14);
   color: var(--text);
 }
-.sim-phone-status,
 .sim-app-header {
   display: flex;
   align-items: center;
@@ -700,22 +699,6 @@ img { max-width: 100%; }
   padding: 9px 16px;
   background: #fff;
 }
-.sim-phone-status {
-  min-height: 34px;
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-.sim-status-icons {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.sim-status-icons svg {
-  display: block;
-  width: 18px;
-  height: 14px;
-}
-.sim-status-icons svg:last-child { width: 22px; }
 .sim-app-header {
   min-height: 54px;
   border-top: 1px solid rgba(31,77,66,0.06);
@@ -930,23 +913,6 @@ img { max-width: 100%; }
   border: 1px solid #e8b7b2;
   background: #fff0ef;
   color: #842e29;
-}
-.sim-bottom-nav {
-  display: flex;
-  justify-content: space-around;
-  gap: 8px;
-  padding: 11px 4px 2px;
-  border-top: 1px solid rgba(31,77,66,0.1);
-  color: var(--muted);
-  font-size: 0.78rem;
-}
-.sim-bottom-nav .is-active { color: var(--green-900); font-weight: 800; }
-.sim-home-indicator {
-  width: 88px;
-  height: 4px;
-  margin: 0 auto 8px;
-  border-radius: 999px;
-  background: #9daaa4;
 }
 .sms-inbox-list { display: grid; gap: 9px; }
 .sms-inbox-item {
