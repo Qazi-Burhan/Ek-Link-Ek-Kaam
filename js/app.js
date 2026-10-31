@@ -1,6 +1,6 @@
 ﻿import { scenarioCatalog, dictionaryEntries } from './scenarios.js';
-import { buildHelperText, getStepLevel, getTargetActionLabel } from './engine.js';
-import { buildSummary, ensureScenarioState, getScenarioState, getStepState, loadState, recordScenarioAttempt, saveState } from './storage.js';
+import { buildHelperText, getStepLevel, shuffleOptions } from './engine.js';
+import { buildSummary, ensureScenarioState, getScenarioState, getStepState, loadState, recordHelpRequest, recordScenarioAttempt, recordStepAttempt, recordStepSuccess, saveState } from './storage.js';
 import { SpeechController } from './speech.js';
 import { translate } from './i18n.js';
 
@@ -11,7 +11,11 @@ const runtime = {
   currentScenarioId: null,
   currentStepIndex: 0,
   answerVisible: false,
-  hintVisible: false
+  hintVisible: false,
+  helpUsedForCurrentStep: false,
+  answerAttemptCount: 0,
+  feedback: null,
+  shuffledOptionsByStep: {}
 };
 
 const dashboardView = document.getElementById('dashboard-view');
@@ -92,8 +96,8 @@ function renderDashboard() {
       <h3>${scenario.title[currentLanguage()]}</h3>
       <p>${scenario.short[currentLanguage()]}</p>
       <div class="scenario-meta">
-        <span>${progress.attempts || 0} attempts</span>
-        <span>${progress.completed ? 'Completed' : 'Ready'}</span>
+        <span>${progress.attempts || 0} ${t('attempts')}</span>
+        <span>${progress.completed ? t('completed') : t('ready')}</span>
       </div>
       <button type="button" class="btn btn-primary scenario-start" data-scenario-id="${scenario.id}">${t('startPractice')}</button>
     `;
@@ -112,6 +116,12 @@ function startScenario(scenarioId) {
   runtime.currentStepIndex = 0;
   runtime.answerVisible = false;
   runtime.hintVisible = false;
+  runtime.helpUsedForCurrentStep = false;
+  runtime.answerAttemptCount = 0;
+  runtime.feedback = null;
+  runtime.shuffledOptionsByStep = Object.fromEntries(
+    scenario.steps.map((step) => [step.id, shuffleOptions(step.options)])
+  );
   recordScenarioAttempt(state, scenarioId);
   saveState(state);
   renderScenario();
@@ -128,6 +138,10 @@ function finishScenario() {
   runtime.currentStepIndex = 0;
   runtime.answerVisible = false;
   runtime.hintVisible = false;
+  runtime.helpUsedForCurrentStep = false;
+  runtime.answerAttemptCount = 0;
+  runtime.feedback = null;
+  runtime.shuffledOptionsByStep = {};
   showDashboard();
   showToast(currentLanguage() === 'ur' ? 'Shabash! Aap ne is scenario ko complete kar liya.' : 'Well done! You completed this scenario.');
 }
@@ -153,8 +167,14 @@ function currentStep() {
 }
 
 function getStepHelperText(step) {
+  if (runtime.answerVisible) {
+    return currentLanguage() === 'ur' ? step.answerUr : step.answerEn;
+  }
+  if (runtime.hintVisible) {
+    return currentLanguage() === 'ur' ? step.hintUr : step.hintEn;
+  }
   const level = getStepLevel(state, runtime.currentScenarioId, step.id);
-  return buildHelperText(step, currentLanguage(), level, runtime.answerVisible);
+  return buildHelperText(step, currentLanguage(), level, false);
 }
 
 function handleChoice(choiceId) {
@@ -162,19 +182,24 @@ function handleChoice(choiceId) {
   const step = currentStep();
   if (!scenario || !step) return;
 
+  const firstAnswer = runtime.answerAttemptCount === 0;
+  runtime.answerAttemptCount += 1;
+  recordStepAttempt(state, scenario.id, step.id);
+
   if (choiceId === step.correctAction) {
-    const stepProgress = getStepState(state, scenario.id, step.id);
-    stepProgress.completed = true;
-    stepProgress.successCount += 1;
-    stepProgress.lastOutcome = 'success';
-    stepProgress.helpLevel = stepProgress.helpLevel === 3 ? 2 : 1;
+    const independent = firstAnswer && !runtime.helpUsedForCurrentStep;
+    recordStepSuccess(state, scenario.id, step.id, independent);
+    runtime.feedback = null;
     saveState(state);
-    showToast(currentLanguage() === 'ur' ? 'Shabash! Yeh sahi jawab tha.' : 'Excellent! That was the correct choice.');
+    showToast(currentLanguage() === 'ur' ? step.correctFeedbackUr : step.correctFeedbackEn);
 
     if (runtime.currentStepIndex + 1 < scenario.steps.length) {
       runtime.currentStepIndex += 1;
       runtime.answerVisible = false;
       runtime.hintVisible = false;
+      runtime.helpUsedForCurrentStep = false;
+      runtime.answerAttemptCount = 0;
+      runtime.feedback = null;
       renderScenario();
       return;
     }
@@ -185,18 +210,24 @@ function handleChoice(choiceId) {
     return;
   }
 
-  showToast(currentLanguage() === 'ur' ? 'Koi baat nahi Ammi! Yeh sirf practice hai. Chaliye, ek aur baar koshish karte hain.' : 'No problem Ammi! This is just practice. Let us try again.');
+  runtime.feedback = { type: 'incorrect' };
+  const stepProgress = getStepState(state, scenario.id, step.id);
+  stepProgress.lastOutcome = 'retry';
+  saveState(state);
+  showToast(currentLanguage() === 'ur'
+    ? 'Koi baat nahi. Yeh practice hai—araam se dobara koshish karein.'
+    : 'No worries. This is practice—take your time and try again.');
+  renderScenario();
 }
 
 function askHint() {
   const step = currentStep();
   if (!step) return;
-  const stepState = getStepState(state, runtime.currentScenarioId, step.id);
-  stepState.helpLevel = 3;
-  stepState.helpRequests += 1;
-  stepState.lastOutcome = 'hint';
+  recordHelpRequest(state, runtime.currentScenarioId, step.id, 'hint');
+  runtime.helpUsedForCurrentStep = true;
   runtime.hintVisible = true;
   runtime.answerVisible = false;
+  runtime.feedback = null;
   saveState(state);
   renderScenario();
 }
@@ -204,12 +235,11 @@ function askHint() {
 function revealAnswer() {
   const step = currentStep();
   if (!step) return;
-  const stepState = getStepState(state, runtime.currentScenarioId, step.id);
-  stepState.helpLevel = 3;
-  stepState.helpRequests += 1;
-  stepState.lastOutcome = 'answer';
+  recordHelpRequest(state, runtime.currentScenarioId, step.id, 'answer');
+  runtime.helpUsedForCurrentStep = true;
   runtime.answerVisible = true;
   runtime.hintVisible = true;
+  runtime.feedback = null;
   saveState(state);
   renderScenario();
 }
@@ -217,12 +247,11 @@ function revealAnswer() {
 function requestStuckHelp() {
   const step = currentStep();
   if (!step) return;
-  const stepState = getStepState(state, runtime.currentScenarioId, step.id);
-  stepState.helpLevel = 3;
-  stepState.helpRequests += 1;
-  stepState.lastOutcome = 'stuck';
+  recordHelpRequest(state, runtime.currentScenarioId, step.id, 'stuck');
+  runtime.helpUsedForCurrentStep = true;
   runtime.answerVisible = true;
   runtime.hintVisible = true;
+  runtime.feedback = null;
   saveState(state);
   renderScenario();
 }
@@ -243,7 +272,9 @@ function openDictionary(term) {
   const entry = dictionaryEntries[term];
   if (!entry) return;
   dictTitle.textContent = term;
+  dictTitle.dir = 'ltr';
   dictBody.textContent = entry[currentLanguage()];
+  dictBody.dir = currentLanguage() === 'ur' ? 'rtl' : 'ltr';
   dictSheet.classList.remove('hidden');
 }
 
@@ -260,23 +291,28 @@ function renderScenario() {
   }
 
   showScenario();
-  const level = getStepLevel(state, scenario.id, step.id);
-  const targetAction = getTargetActionLabel(step, currentLanguage());
   scenarioHeader.innerHTML = `${scenario.icon} <span>${scenario.title[currentLanguage()]}</span>`;
 
   const helperText = getStepHelperText(step);
   helperCopy.textContent = helperText;
 
-  const optionsHtml = step.options.map((option) => {
-    const shouldHighlight = (level === 3 || runtime.hintVisible || runtime.answerVisible) && option.id === step.correctAction;
+  const shuffledOptions = runtime.shuffledOptionsByStep[step.id] || step.options;
+  const optionsHtml = shuffledOptions.map((option) => {
     return `
-      <button type="button" class="choice-btn ${shouldHighlight ? 'is-highlighted' : ''}" data-choice="${option.id}">
+      <button type="button" class="choice-btn" data-choice="${option.id}">
         ${currentLanguage() === 'ur' ? option.labelUr : option.labelEn}
       </button>
     `;
   }).join('');
 
   const progressText = `Step ${runtime.currentStepIndex + 1} / ${scenario.steps.length}`;
+  let feedbackText = '';
+  if (runtime.feedback?.type === 'incorrect') {
+    const correctOption = step.options.find((option) => option.id === step.correctAction);
+    const explanation = currentLanguage() === 'ur' ? step.incorrectFeedbackUr : step.incorrectFeedbackEn;
+    const correctLabel = currentLanguage() === 'ur' ? correctOption.labelUr : correctOption.labelEn;
+    feedbackText = `${explanation} ${t('correctAnswer')} ${correctLabel}`;
+  }
 
   practiceStage.innerHTML = `
     <div class="device-shell">
@@ -293,16 +329,15 @@ function renderScenario() {
         <div class="screen-block">
           <div class="screen-alert">${step.title[currentLanguage()]}</div>
           <p class="screen-question">${currentLanguage() === 'ur' ? step.promptUr : step.promptEn}</p>
-          <div class="screen-target-row">
-            <span class="tag">Target</span>
-            <strong>${targetAction}</strong>
-          </div>
           <div class="choice-grid">${optionsHtml}</div>
+          <div id="answer-feedback" class="answer-feedback ${runtime.feedback ? `is-${runtime.feedback.type}` : 'is-empty'}" role="status" aria-live="polite">
+          </div>
         </div>
       </div>
     </div>
   `;
 
+  practiceStage.querySelector('#answer-feedback').textContent = feedbackText;
   practiceStage.querySelectorAll('[data-choice]').forEach((button) => {
     button.addEventListener('click', () => handleChoice(button.dataset.choice));
   });
@@ -321,8 +356,8 @@ function handleShareProgress() {
 function confirmShare() {
   const summary = buildSummary(state);
   const message = currentLanguage() === 'ur'
-    ? `Ammi ne aaj ${summary.completedScenarios} scenario ki practice ki. Unhon ne ${summary.independentSteps} steps khud complete kiye. Woh digital skills seekh rahi hain!`
-    : `Ammi practiced ${summary.completedScenarios} scenarios today. She completed ${summary.independentSteps} steps independently. She is building digital confidence!`;
+    ? `Aaj ${summary.completedScenarios} practice mukammal hui. ${summary.independentSteps} qadam baghair madad ke kiye gaye. Digital hunar seekhne ka safar jari hai!`
+    : `${summary.completedScenarios} practice scenarios completed today. ${summary.independentSteps} steps were completed independently. The digital learning journey continues!`;
 
   const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
   window.open(url, '_blank', 'noopener,noreferrer');
@@ -347,6 +382,10 @@ function attachInitialEvents() {
     runtime.currentStepIndex = 0;
     runtime.answerVisible = false;
     runtime.hintVisible = false;
+    runtime.helpUsedForCurrentStep = false;
+    runtime.answerAttemptCount = 0;
+    runtime.feedback = null;
+    runtime.shuffledOptionsByStep = {};
     showDashboard();
   });
   document.getElementById('ask-hint').addEventListener('click', askHint);

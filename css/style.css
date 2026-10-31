@@ -408,10 +408,30 @@ img { max-width: 100%; }
   padding: 10px 12px;
   text-align: center;
 }
-.choice-btn.is-highlighted {
-  background: linear-gradient(135deg, rgba(83,169,140,0.18), rgba(215,243,245,0.8));
-  border-color: rgba(46,110,93,0.28);
-  box-shadow: inset 0 0 0 2px rgba(46,110,93,0.2);
+.answer-feedback {
+  margin-top: 12px;
+  min-height: 0;
+  border-radius: 14px;
+  padding: 0;
+  line-height: 1.65;
+}
+
+.answer-feedback.is-empty {
+  display: none;
+}
+
+.answer-feedback.is-incorrect,
+.answer-feedback.is-correct {
+  padding: 12px 14px;
+  background: rgba(249, 231, 203, 0.62);
+  border: 1px solid rgba(138, 90, 31, 0.18);
+  color: #69451d;
+}
+
+.answer-feedback.is-correct {
+  background: rgba(223, 245, 235, 0.8);
+  border-color: rgba(46, 110, 93, 0.2);
+  color: var(--green-900);
 }
 .side-panel {
   display: flex;

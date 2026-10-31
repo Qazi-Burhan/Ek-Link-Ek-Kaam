@@ -25,23 +25,33 @@ export function completeScenario(state, scenarioId) {
 }
 
 export function buildHelperText(step, lang, level, answerVisible) {
-  const instruction = lang === 'ur' ? step.instructionUr : step.instructionEn;
+  const context = lang === 'ur' ? step.contextUr : step.contextEn;
   const hint = lang === 'ur' ? step.hintUr : step.hintEn;
   const answer = lang === 'ur' ? step.answerUr : step.answerEn;
 
   if (level === 3) {
-    return answerVisible ? `${instruction} ${answer}` : instruction;
+    return answerVisible ? answer : context;
   }
 
   if (level === 2) {
-    return hint || instruction;
+    return answerVisible ? answer : (lang === 'ur'
+      ? 'Aaraam se options par ghaur karein. Zaroorat ho to hint le sakte hain.'
+      : 'Take your time with the options. You can ask for a hint if needed.');
   }
 
-  return answerVisible ? `${lang === 'ur' ? 'Ab aap kya karengi?' : 'What will you do next?'} ${answer}` : (lang === 'ur' ? 'Ab aap kya karengi?' : 'What will you do next?');
+  return answerVisible ? answer : (lang === 'ur' ? 'Ab agla qadam kya hoga?' : 'What will you do next?');
 }
 
-export function getTargetActionLabel(step, lang) {
-  const target = step.options.find((option) => option.id === step.correctAction);
-  if (!target) return '';
-  return lang === 'ur' ? target.labelUr : target.labelEn;
+export function shuffleOptions(options, random = Math.random) {
+  const shuffled = [...options];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+
+  if (shuffled.length > 1 && shuffled.every((option, index) => option.id === options[index].id)) {
+    [shuffled[0], shuffled[1]] = [shuffled[1], shuffled[0]];
+  }
+
+  return shuffled;
 }

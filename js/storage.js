@@ -54,6 +54,7 @@ export function getStepState(state, scenarioId, stepId) {
       helpRequests: 0,
       completed: false,
       successCount: 0,
+      independentSuccessCount: 0,
       lastOutcome: 'pending'
     };
   }
@@ -66,20 +67,27 @@ export function recordScenarioAttempt(state, scenarioId) {
   return scenario;
 }
 
-export function recordStepSuccess(state, scenarioId, stepId) {
+export function recordStepAttempt(state, scenarioId, stepId) {
   const step = getStepState(state, scenarioId, stepId);
   step.attempts += 1;
+  return step;
+}
+
+export function recordStepSuccess(state, scenarioId, stepId, independent = false) {
+  const step = getStepState(state, scenarioId, stepId);
   step.successCount += 1;
   step.completed = true;
   step.lastOutcome = 'success';
-  step.helpLevel = step.helpLevel === 3 ? 2 : 1;
+  if (independent) {
+    step.independentSuccessCount = (step.independentSuccessCount || 0) + 1;
+    step.helpLevel = Math.max(1, step.helpLevel - 1);
+  }
   return step;
 }
 
 export function recordHelpRequest(state, scenarioId, stepId, type) {
   const step = getStepState(state, scenarioId, stepId);
   step.helpRequests += 1;
-  step.attempts += 1;
   step.lastOutcome = type;
   step.helpLevel = 3;
   return step;
@@ -104,7 +112,7 @@ export function buildSummary(state) {
     if (!scenario.completed) scenariosNeedPractice += 1;
 
     Object.values(scenario.steps || {}).forEach((step) => {
-      if ((step.successCount || 0) > 0 && (step.helpLevel || 3) === 1) {
+      if ((step.independentSuccessCount || 0) > 0) {
         independentSteps += 1;
       }
     });
