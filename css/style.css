@@ -336,39 +336,6 @@ img { max-width: 100%; }
   padding: 16px;
   box-shadow: var(--shadow);
 }
-.device-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: 700;
-  color: var(--green-900);
-  margin-bottom: 12px;
-}
-.device-status-icons {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.device-status-icon {
-  display: block;
-  width: 18px;
-  height: 16px;
-}
-.device-battery-icon {
-  width: 22px;
-}
-.device-status-icon:first-child path,
-.device-battery-level {
-  fill: currentColor;
-}
-.device-battery-icon rect,
-.device-battery-icon path:not(.device-battery-level) {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
 .simulator-app {
   background: linear-gradient(180deg, #edf7f5, #f5f8f6);
   border: 1px solid rgba(31,77,66,0.08);
