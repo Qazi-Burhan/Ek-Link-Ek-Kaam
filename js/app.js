@@ -50,6 +50,7 @@ const dictTitle = document.getElementById('dict-title');
 const dictBody = document.getElementById('dict-body');
 const consentModal = document.getElementById('consent-modal');
 const toast = document.getElementById('toast');
+let dictionaryQuery = '';
 
 function currentLanguage() {
   return state.language;
@@ -72,6 +73,10 @@ function syncStaticText() {
     if (!key) return;
     const value = translate(key, currentLanguage());
     element.textContent = value;
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((element) => {
+    const key = element.dataset.i18nPlaceholder;
+    if (key) element.setAttribute('placeholder', translate(key, currentLanguage()));
   });
 }
 
@@ -114,6 +119,32 @@ function getScenarioById(id) {
 
 function renderDashboard() {
   const summary = buildSummary(state);
+  const totalScenarios = scenarioCatalog.length;
+  const completed = Math.min(summary.completedScenarios, totalScenarios);
+  const remaining = Math.max(0, totalScenarios - completed);
+  const percent = totalScenarios ? Math.round((completed / totalScenarios) * 100) : 0;
+  const helpLevels = scenarioCatalog.flatMap((scenario) => scenario.steps.flatMap((step) => {
+    const progress = state.scenarios[scenario.id]?.steps?.[step.id];
+    if (!progress?.attempts) return [];
+    const level = Number(progress.helpLevel);
+    return [Number.isFinite(level) ? Math.min(3, Math.max(0, level)) : 3];
+  }));
+  const averageHelpLevel = helpLevels.length
+    ? Math.round(helpLevels.reduce((sum, level) => sum + level, 0) / helpLevels.length)
+    : 3;
+  const guidanceKey = ['helpIndependent', 'helpRecall', 'helpHint', 'helpFull'][averageHelpLevel];
+  const progressRing = document.getElementById('learning-progress-ring');
+  progressRing.style.setProperty('--progress-value', `${percent}%`);
+  progressRing.setAttribute('aria-valuenow', String(percent));
+  progressRing.setAttribute('aria-label', t('learningJourney'));
+  document.getElementById('learning-progress-percent').textContent = `${percent}%`;
+  document.getElementById('learning-progress-fill').style.width = `${percent}%`;
+  document.getElementById('learning-progress-caption').textContent = t('learningProgressCaption', {
+    completed,
+    total: totalScenarios,
+    remaining
+  });
+  document.getElementById('dashboard-help-level').textContent = t(guidanceKey);
   document.getElementById('completed-scenarios').textContent = String(summary.completedScenarios);
   document.getElementById('attempt-count').textContent = String(summary.attempts);
   document.getElementById('independent-steps').textContent = String(summary.independentSteps);
@@ -137,13 +168,17 @@ function renderDashboard() {
     article.innerHTML = `
       <div class="scenario-card-header">
         <span class="scenario-icon" aria-hidden="true">${scenario.icon}</span>
-        <span class="scenario-status ${progress.completed ? 'is-complete' : ''}">${progress.completed ? '✅' : '🟢'}</span>
+        <span class="scenario-status ${progress.completed ? 'is-complete' : ''}" aria-hidden="true">${progress.completed ? '✓' : '·'}</span>
       </div>
       <h3>${scenario.title[currentLanguage()]}</h3>
       <p>${scenario.short[currentLanguage()]}</p>
       <div class="scenario-meta">
         <span>${progress.attempts || 0} ${t('attempts')}</span>
+        <span>${t('estimatedMinutes', { minutes: Math.max(5, Math.round(scenario.steps.length * 1.5))})}</span>
+      </div>
+      <div class="scenario-meta scenario-status-row">
         <span>${progress.completed ? t('completed') : t('ready')}</span>
+        <span aria-hidden="true">${progress.completed ? '✓' : '›'}</span>
       </div>
       <div class="scenario-meta teach-back-meta">
         <span>${t('teachBackStatus')}</span>
@@ -677,14 +712,38 @@ function renderDictionary() {
   [dictionaryList, document.getElementById('home-dictionary-list')].forEach((list) => {
     if (!list) return;
     list.innerHTML = '';
+    let matchingTerms = 0;
     Object.keys(dictionaryEntries).forEach((term) => {
+      const entry = dictionaryEntries[term];
+      const searchText = `${term} ${entry[currentLanguage()]} ${entry.en} ${entry.ur}`.toLocaleLowerCase();
+      const matches = !dictionaryQuery || searchText.includes(dictionaryQuery.toLocaleLowerCase());
+      if (matches) matchingTerms += 1;
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'dictionary-term';
       button.textContent = term;
+      button.hidden = !matches;
       button.addEventListener('click', () => openDictionary(term));
       list.appendChild(button);
     });
+    if (!matchingTerms) {
+      const empty = document.createElement('p');
+      empty.className = 'dictionary-empty';
+      empty.textContent = t('dictionaryNoResults');
+      list.appendChild(empty);
+    }
+  });
+  document.querySelectorAll('.dictionary-search').forEach((input) => {
+    if (input.value !== dictionaryQuery) input.value = dictionaryQuery;
+  });
+}
+
+function updateHelpJourney(level) {
+  document.querySelectorAll('.help-journey-step').forEach((step) => {
+    const active = Number(step.dataset.helpLevel) === level;
+    step.classList.toggle('is-current', active);
+    if (active) step.setAttribute('aria-current', 'step');
+    else step.removeAttribute('aria-current');
   });
 }
 
@@ -725,6 +784,7 @@ function renderScenario() {
   if (runtime.mode === 'messages' && runtime.messagePhase === 'wallet-inbox') {
     helperCopy.textContent = t('walletInboxHelp');
     document.getElementById('helper-actions').classList.add('hidden');
+    document.querySelector('.help-journey').classList.add('hidden');
     renderWalletInbox(practiceStage, {
       language: currentLanguage(),
       completedIds: getScenarioState(state, scenario.id).messagePractice.completedIds,
@@ -749,6 +809,7 @@ function renderScenario() {
     document.getElementById('help-level').textContent = t(
       level === 3 ? 'helpFull' : level === 2 ? 'helpHint' : level === 1 ? 'helpRecall' : 'helpIndependent'
     );
+    updateHelpJourney(level);
     document.getElementById('helper-actions').classList.remove('hidden');
     const progress = getScenarioState(state, scenario.id).messagePractice;
     const lastWarningId = [...runtime.walletSelectedClues].at(-1);
@@ -774,6 +835,7 @@ function renderScenario() {
   if (runtime.mode === 'messages' && runtime.messagePhase === 'wallet-summary') {
     helperCopy.textContent = t('walletSummaryHelp');
     document.getElementById('helper-actions').classList.add('hidden');
+    document.querySelector('.help-journey').classList.add('hidden');
     renderWalletLearningSummary(practiceStage, {
       language: currentLanguage(),
       onBack: returnToWalletInbox,
@@ -783,6 +845,7 @@ function renderScenario() {
     return;
   }
 
+  document.querySelector('.help-journey').classList.remove('hidden');
   const step = currentStep();
   if (!step) {
     showDashboard();
@@ -794,6 +857,7 @@ function renderScenario() {
     document.getElementById('help-level').textContent = t(
       level === 3 ? 'helpFull' : level === 2 ? 'helpHint' : level === 1 ? 'helpRecall' : 'helpIndependent'
     );
+    updateHelpJourney(level);
     document.getElementById('helper-actions').classList.remove('hidden');
     renderMessagePractice(scenario, helperCopy.textContent);
     renderDictionary();
@@ -805,6 +869,7 @@ function renderScenario() {
   document.getElementById('help-level').textContent = t(
     level === 3 ? 'helpFull' : level === 2 ? 'helpHint' : level === 1 ? 'helpRecall' : 'helpIndependent'
   );
+  updateHelpJourney(level);
   document.getElementById('helper-actions').classList.remove('hidden');
   const shuffledOptions = runtime.shuffledOptionsByStep[step.id] || step.options;
   let feedbackText = '';
@@ -823,6 +888,7 @@ function renderScenario() {
     stepIndex: runtime.currentStepIndex,
     totalSteps: activeSteps().length,
     options: shuffledOptions,
+    teachBackMessage: runtime.mode === 'teachback' ? t('teachBackBanner') : '',
     feedbackText,
     feedbackType: runtime.feedback?.type || '',
     onChoice: handleChoice,
@@ -957,6 +1023,12 @@ function attachInitialEvents() {
   document.getElementById('ask-hint').addEventListener('click', askHint);
   document.getElementById('reveal-answer').addEventListener('click', revealAnswer);
   document.getElementById('stuck-btn').addEventListener('click', requestStuckHelp);
+  document.querySelectorAll('.dictionary-search').forEach((input) => {
+    input.addEventListener('input', () => {
+      dictionaryQuery = input.value.trim();
+      renderDictionary();
+    });
+  });
   document.getElementById('close-dictionary').addEventListener('click', closeDictionary);
   document.getElementById('speak-dictionary').addEventListener('click', async () => {
     const text = dictBody.textContent || '';

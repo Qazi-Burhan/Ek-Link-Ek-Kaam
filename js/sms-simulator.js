@@ -18,14 +18,6 @@ function addScreenTitle(content, language, title, progress = '') {
   content.append(heading);
 }
 
-function addBottomNav(content, language) {
-  const bottom = node('div', 'sim-bottom-nav');
-  [copy(language, 'چیٹس', 'Chats'), copy(language, 'پیغامات', 'Messages'), copy(language, 'رابطے', 'Contacts')]
-    .forEach((label, index) => bottom.append(node('span', index === 1 ? 'is-active' : '', label)));
-  bottom.setAttribute('aria-hidden', 'true');
-  content.append(bottom);
-}
-
 function openPhone(root, language, title, onBack) {
   const { phone, content } = createPhoneShell({
     root,
@@ -36,9 +28,6 @@ function openPhone(root, language, title, onBack) {
   });
   phone.classList.add('sim-phone-messages');
   phone.append(content);
-  const indicator = node('div', 'sim-home-indicator');
-  indicator.setAttribute('aria-hidden', 'true');
-  phone.append(indicator);
   return { phone, content };
 }
 
@@ -84,7 +73,6 @@ export function renderWalletInbox(root, { language, completedIds, onOpenWallet, 
     summary.addEventListener('click', onShowSummary);
     content.append(summary);
   }
-  addBottomNav(content, language);
 }
 
 export function renderWalletMessage(root, {
@@ -213,7 +201,6 @@ export function renderWalletMessage(root, {
       content.append(summaryButton);
     }
   }
-  addBottomNav(content, language);
 }
 
 export function renderWalletLearningSummary(root, { language, onBack, onFinish }) {
@@ -234,5 +221,4 @@ export function renderWalletLearningSummary(root, { language, onBack, onFinish }
   finish.type = 'button';
   finish.addEventListener('click', onFinish);
   content.append(finish);
-  addBottomNav(content, language);
 }

@@ -7,7 +7,8 @@ A warm, Urdu-first digital literacy simulator for adults to safely practise ever
 - Six safe practice scenarios, each with five decision-making questions
 - Five fictional message examples plus two fictional JazzCash/Easypaisa-style SMS exercises; tap warning signs without opening links
 - Two optional teach-back questions for every scenario, with completion tracked separately
-- A simple word guide available from both the home screen and practice screens
+- A searchable simple word guide available from both the home screen and practice screens
+- A learning dashboard with overall completion and adaptive-guidance progress
 - Urdu-first interface with English toggle and right-to-left layout
 - Neutral answer options shuffled independently at the beginning of each scenario session
 - Gentle explanations after a choice, including an opportunity to retry after an incorrect answer

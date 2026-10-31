@@ -16,19 +16,6 @@ function labeledRow(label, value, lang) {
   return row;
 }
 
-function addStatusBar(phone, lang) {
-  const status = element('div', 'sim-phone-status');
-  status.setAttribute('aria-label', pair('فرضی فون کی حالت', 'Simulated phone status', lang));
-  status.append(element('span', 'sim-phone-time', '9:41'));
-  const icons = element('div', 'sim-status-icons');
-  icons.innerHTML = `
-    <svg aria-hidden="true" viewBox="0 0 20 14"><path d="M1 4.5a13 13 0 0 1 18 0M4 7.5a9 9 0 0 1 12 0M7 10.5a5 5 0 0 1 6 0M10 13h.01" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-    <svg aria-hidden="true" viewBox="0 0 22 14"><path d="M2 12V9M7 12V7M12 12V4M17 12V1" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
-    <svg aria-hidden="true" viewBox="0 0 24 14"><rect x="1" y="2" width="19" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M22 5v4" stroke="currentColor" stroke-width="2"/><rect x="3" y="4" width="13" height="6" rx="1" fill="currentColor"/></svg>`;
-  status.append(icons);
-  phone.append(status);
-}
-
 function appendActionButtons(container, options, lang, onChoice) {
   const actions = element('div', 'sim-action-list');
   actions.setAttribute('role', 'group');
@@ -184,7 +171,6 @@ function addDemoScene(container, scenarioId, stepIndex, lang) {
 export function createPhoneShell({ root, language, title, icon, onBack }) {
   root.replaceChildren();
   const phone = element('div', 'sim-phone');
-  addStatusBar(phone, language);
   const appHeader = element('div', 'sim-app-header');
   const back = element('button', 'sim-phone-back', pair('⌂', '⌂', language));
   back.type = 'button';
@@ -215,6 +201,7 @@ export function renderPhoneSimulation({
   stepIndex,
   totalSteps,
   options,
+  teachBackMessage,
   feedbackText,
   feedbackType,
   onChoice,
@@ -232,6 +219,11 @@ export function renderPhoneSimulation({
   titlebar.append(element('span', 'sim-step-title', step.title[language]));
   titlebar.append(element('span', 'sim-step-count', `${stepIndex + 1} / ${totalSteps}`));
   content.append(titlebar);
+  if (teachBackMessage) {
+    const achievement = element('div', 'teach-back-banner', teachBackMessage);
+    achievement.setAttribute('role', 'note');
+    content.append(achievement);
+  }
 
   const scene = element('section', 'sim-app-scene');
   scene.setAttribute('aria-label', pair('فرضی ایپ کی اسکرین', 'Fictional app screen', language));
@@ -244,13 +236,5 @@ export function renderPhoneSimulation({
   feedback.setAttribute('role', 'status');
   feedback.setAttribute('aria-live', 'polite');
   content.append(feedback);
-  const bottomNav = element('div', 'sim-bottom-nav');
-  [pair('گھر', 'Home', language), pair('مشق', 'Practice', language), pair('مدد', 'Help', language)]
-    .forEach((label, index) => bottomNav.append(element('span', index === 1 ? 'is-active' : '', label)));
-  bottomNav.setAttribute('aria-hidden', 'true');
-  content.append(bottomNav);
   phone.append(content);
-  const homeIndicator = element('div', 'sim-home-indicator');
-  homeIndicator.setAttribute('aria-hidden', 'true');
-  phone.append(homeIndicator);
 }
